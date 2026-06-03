@@ -121,52 +121,41 @@ export function simulateGrades(
       possible: true,
       targetMedia,
       currentContrib: currentCredite > 0 ? currentSum / currentCredite : 0,
-      remainingSubjects: pending.map((g) => ({
-        titlu: g.titlu,
-        credite: parseFloat2(g.credite),
-        notaNecesara: 5,
-      })),
+      remainingSubjects: pending
+        .slice()
+        .sort((a, b) => parseFloat2(b.credite) - parseFloat2(a.credite))
+        .map((g) => ({
+          titlu: g.titlu,
+          credite: parseFloat2(g.credite),
+          notaNecesara: 5,
+        })),
       message: `Ajunge să promovezi toate materiile cu nota 5.`,
     };
   }
 
-  // Distribute needed evenly weighted by credits
-  const notaMedie = pendingCredite > 0 ? needed / pendingCredite : 0;
+  // Uniform minimum grade: the single grade X such that scoring X at every
+  // pending subject achieves exactly targetMedia. This is the only internally
+  // consistent set of minima — per-subject calculations are interdependent.
+  // X = needed / pendingCredite
+  const notaUniforma = pendingCredite > 0 ? needed / pendingCredite : 11;
+  const possible = notaUniforma <= 10;
 
-  // Nota uniformă necesară: dacă iei aceeași notă la toate materiile rămase,
-  // care trebuie să fie aceea ca să atingi media dorită?
-  // needed = notaUniforma * crediteRamase  →  notaUniforma = needed / crediteRamase
-  const notaUniforma = pendingCredite > 0 ? needed / pendingCredite : 0;
-
-  if (notaUniforma > 10) {
-    return {
-      possible: false,
-      targetMedia,
-      currentContrib: currentCredite > 0 ? currentSum / currentCredite : 0,
-      remainingSubjects: pending.map((g) => ({
-        titlu: g.titlu,
-        credite: parseFloat2(g.credite),
-        notaNecesara: 10,
-      })),
-      message: `Imposibil — ai nevoie de ${notaUniforma.toFixed(2)} la toate materiile rămase, mai mare decât 10.`,
-    };
-  }
-
-  const notaNecesara = Math.max(5, notaUniforma);
-  const mesaj =
-    notaUniforma < 5
-      ? `Îți ajunge nota 5 la toate materiile rămase — vei depăși media ${targetMedia}.`
-      : `Ai nevoie de nota ${notaUniforma.toFixed(2)} la fiecare materie rămasă.`;
+  const mesaj = !possible
+    ? `Imposibil — chiar și cu 10 la toate nu poți atinge media ${targetMedia.toFixed(1)}.`
+    : `Trebuie să iei minim ${notaUniforma.toFixed(2)} la fiecare materie rămasă.`;
 
   return {
-    possible: true,
+    possible,
     targetMedia,
     currentContrib: currentCredite > 0 ? currentSum / currentCredite : 0,
-    remainingSubjects: pending.map((g) => ({
-      titlu: g.titlu,
-      credite: parseFloat2(g.credite),
-      notaNecesara,
-    })),
+    remainingSubjects: pending
+      .slice()
+      .sort((a, b) => parseFloat2(b.credite) - parseFloat2(a.credite))
+      .map((g) => ({
+        titlu: g.titlu,
+        credite: parseFloat2(g.credite),
+        notaNecesara: Math.min(10, Math.max(5, notaUniforma)),
+      })),
     message: mesaj,
   };
 }

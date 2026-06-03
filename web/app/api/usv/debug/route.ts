@@ -20,26 +20,24 @@ export async function GET(req: Request) {
     const res = await curlGet(path, session.cookies);
 
     if (format === "fields") {
-      // Return all PeopleSoft $N field bases + sample text per field
       const html = res.body;
-      const matches = [...html.matchAll(/id="([^"]+\$(\d+))"/gi)];
       const bases: Record<string, { rows: number; sample: string }> = {};
 
-      for (const m of matches) {
+      // PeopleSoft uses single-quoted IDs — match both quote styles
+      const re = /id=['"]([^'"]+\$(\d+))['"]/gi;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(html)) !== null) {
         const fullId = m[1];
         const base = fullId.replace(/\$\d+$/, "");
         const rowNum = parseInt(m[2]);
-
         if (!bases[base]) bases[base] = { rows: 0, sample: "" };
         if (rowNum + 1 > bases[base].rows) bases[base].rows = rowNum + 1;
         if (!bases[base].sample) {
-          // Extract text content of the element
-          const elMatch = html.match(new RegExp(`id="${fullId}"[^>]*>([^<]*)<`));
+          const elMatch = html.match(new RegExp(`id=['"]${fullId.replace(/\$/g, "\\$")}['"][^>]*>([^<]*)<`));
           bases[base].sample = elMatch?.[1]?.trim() ?? "";
         }
       }
 
-      // Also extract table headers (simple extraction without 's' flag)
       const thMatches = [...html.matchAll(/<th[^>]*>([^<]*)<\/th>/gi)];
       const headers = thMatches.map(m => m[1].trim()).filter(Boolean);
 
@@ -55,6 +53,18 @@ export async function GET(req: Request) {
         .replace(/\s+/g, " ")
         .trim();
       return new NextResponse(text, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+    }
+
+    if (format === "grep") {
+      const needle = searchParams.get("q") ?? "";
+      if (!needle) return NextResponse.json({ error: "Missing ?q=" }, { status: 400 });
+      // Return 80-char context windows around every match
+      const html = res.body;
+      const results: string[] = [];
+      const re = new RegExp(`.{0,80}${needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}.{0,80}`, "gi");
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(html)) !== null) results.push(m[0]);
+      return NextResponse.json({ matches: results, total: results.length });
     }
 
     return new NextResponse(res.body, {

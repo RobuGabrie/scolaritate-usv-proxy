@@ -168,20 +168,13 @@
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Fixed background glow orb — no inline styles needed in JSX */
-.login-orb {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  width: 900px;
-  height: 500px;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 70% 55% at 50% 0%,
-    color-mix(in oklch, var(--primary) 13%, transparent) 0%,
-    transparent 70%
+/* Background glow — painted directly on the page element, no separate node */
+.login-page {
+  background-image: radial-gradient(
+    ellipse 100% 55% at 50% 0%,
+    rgba(109, 120, 213, 0.18) 0%,
+    transparent 75%
   );
-  animation: orbPulse 8s ease-in-out infinite;
 }
 
 /* Gradient text: subtle color sweep on the headline accent line */
@@ -189,7 +182,7 @@
   background: linear-gradient(
     90deg,
     var(--foreground) 0%,
-    color-mix(in oklch, var(--primary) 60%, var(--foreground)) 45%,
+    var(--primary) 45%,
     var(--foreground) 90%
   );
   background-size: 200% auto;

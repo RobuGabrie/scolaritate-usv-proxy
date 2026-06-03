@@ -128,7 +128,7 @@ function AnimatedHeadline({ text, baseDelay = 0 }: { text: string; baseDelay?: n
 /* ─── Primary button ─────────────────────────────────────────────────────────── */
 
 const primaryBtn =
-  "group flex items-center justify-center gap-2 h-11 w-full rounded-3xl bg-foreground text-background text-[13px] font-medium px-6 hover:opacity-[0.88] disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150";
+  "group flex items-center justify-center gap-2 h-11 w-full rounded-3xl bg-foreground text-background text-[13px] font-medium px-6 cursor-pointer hover:opacity-[0.88] active:opacity-75 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity duration-150 touch-manipulation";
 
 /* ─── Step: start ───────────────────────────────────────────────────────────── */
 
@@ -139,10 +139,10 @@ function StartStep({ onContinue }: { onContinue: () => void }) {
       <div>
         <h1 className="text-[28px] sm:text-[32px] font-bold tracking-[-0.024em] leading-[1.1]">
           <span className="block">
-            <AnimatedHeadline text="Note mai ușor," baseDelay={60} />
+            <AnimatedHeadline text="Vezi notele mai ușor," baseDelay={60} />
           </span>
-          <span className="block login-grad-text">
-            <AnimatedHeadline text="fără bătăi de cap." baseDelay={260} />
+          <span className="block overflow-hidden">
+            <AnimatedHeadline text="fără vpn" baseDelay={60 + 65 * 5} />
           </span>
         </h1>
 
@@ -154,8 +154,9 @@ function StartStep({ onContinue }: { onContinue: () => void }) {
       </div>
 
       {/* Buttons */}
-      <div className="flex flex-col gap-3 animate-login-fade [animation-delay:520ms]">
+      <div className="flex flex-col gap-3 mt-2">
         <button
+          type="button"
           onClick={onContinue}
           className={primaryBtn}
         >
@@ -167,7 +168,7 @@ function StartStep({ onContinue }: { onContinue: () => void }) {
           href="https://github.com/RobuGabrie/scolaritate-usv-proxy"
           target="_blank"
           rel="noreferrer"
-          className="flex items-center justify-center gap-1.5 text-[12px] text-muted-foreground/60 hover:text-muted-foreground transition-colors underline underline-offset-4"
+          className="mx-auto flex items-center gap-1.5 text-[12px] text-muted-foreground/60 hover:text-muted-foreground transition-colors underline underline-offset-4"
         >
           <IconGitHub />
           Cod sursă pe GitHub
@@ -375,17 +376,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-5 bg-background relative overflow-hidden">
+    <div className="login-page min-h-[100dvh] flex flex-col items-center justify-center px-5 bg-background relative">
 
-      {/* Background orb — all styling lives in .login-orb (globals.css) */}
-      <div aria-hidden className="login-orb" />
-
-      <div className="w-full max-w-[300px] z-10 animate-login-fade">
+      <div className="relative w-full max-w-[300px] z-10 animate-login-fade">
 
         {/* Step content — Tailwind transition on exit */}
         <div className={[
-          "transition-[opacity,transform] duration-200 ease-in-out",
-          isExiting ? "opacity-0 translate-y-1.5" : "opacity-100 translate-y-0",
+          "transition-[opacity,translate] duration-200 ease-in-out",
+          isExiting ? "opacity-0 translate-y-1.5" : "opacity-100",
         ].join(" ")}>
           {step === "start" && <StartStep onContinue={() => goTo("email")} />}
           {step === "email" && (

@@ -35,6 +35,7 @@ export default async function NotePage() {
       <GradesView
         grades={grades?.grades ?? []}
         academicYear={grades?.academicYear ?? ""}
+        currentStrm={grades?.psContext?.currentStrm ?? ""}
       />
     </main>
   );

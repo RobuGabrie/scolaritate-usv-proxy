@@ -1,6 +1,30 @@
 import { parse, HTMLElement } from "node-html-parser";
 import type { Grade } from "./types";
 
+export interface PsContext {
+  emplid: string;
+  acadCareer: string;
+  institution: string;
+  currentStrm: string;
+}
+
+export function parsePsContext(html: string): PsContext | null {
+  try {
+    const m = html.match(/strCurrUrl\s*=\s*['"]([^'"]+)['"]/i);
+    if (!m) return null;
+    const qs = (m[1].split("?")[1] ?? "").replace(/&amp;/g, "&");
+    const p = new URLSearchParams(qs);
+    const strm = p.get("STRM");
+    const emplid = p.get("EMPLID");
+    const acadCareer = p.get("ACAD_CAREER");
+    const institution = p.get("INSTITUTION") ?? "USV";
+    if (!emplid || !acadCareer || !strm) return null;
+    return { emplid, acadCareer, institution, currentStrm: strm };
+  } catch {
+    return null;
+  }
+}
+
 function clean(s: string): string {
   return s
     .replace(/&#037;/g, "%")

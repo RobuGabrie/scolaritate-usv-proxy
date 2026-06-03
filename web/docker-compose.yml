@@ -5,12 +5,15 @@ services:
     ports:
       - "3000:3000"
     environment:
-      VPN_SERVER_IPorFQDN: vpn.usv.ro
+      VPN_SERVER_IPV4: vpn.usv.ro
       VPN_PSK: ${VPN_PSK}
       VPN_USERNAME: ${VPN_USERNAME}
       VPN_PASSWORD: ${VPN_PASSWORD}
     volumes:
       - /lib/modules:/lib/modules:ro
+      - ./vpn-wrapper.sh:/vpn-wrapper.sh:ro
+      - ./ppp-ip-up.sh:/etc/ppp/ip-up:ro
+    command: ["/bin/sh", "/vpn-wrapper.sh"]
     devices:
       - /dev/ppp
     sysctls:
@@ -32,5 +35,5 @@ services:
       vpn:
         condition: service_healthy
     environment:
-      JWT_SECRET: ${JWT_SECRET}
+      AUTH_SECRET: ${JWT_SECRET}
     restart: unless-stopped

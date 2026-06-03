@@ -64,9 +64,16 @@ async function curl(url: string, extra: string[], follow = true): Promise<CurlRe
   }
 }
 
+// PeopleSoft embeds the last-visited URL in SignOnDefault cookie value,
+// which can contain newlines (folded Set-Cookie header). Strip them before
+// passing to curl — HTTP headers cannot contain bare CR/LF.
+function sanitizeCookies(cookies: string): string {
+  return cookies.replace(/\r?\n\s*/g, " ").replace(/\r/g, "");
+}
+
 export function curlGet(url: string, cookies?: string): Promise<CurlResult> {
   const extra: string[] = [];
-  if (cookies) extra.push("-H", `Cookie: ${cookies}`);
+  if (cookies) extra.push("-H", `Cookie: ${sanitizeCookies(cookies)}`);
   return curl(url, extra, true);
 }
 
@@ -78,6 +85,6 @@ export function curlPost(
   follow = true
 ): Promise<CurlResult> {
   const extra = ["-X", "POST", "--data", body, "-H", `Content-Type: ${contentType}`];
-  if (cookies) extra.push("-H", `Cookie: ${cookies}`);
+  if (cookies) extra.push("-H", `Cookie: ${sanitizeCookies(cookies)}`);
   return curl(url, extra, follow);
 }

@@ -1,113 +1,99 @@
 "use client";
 
+import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import type { Grade } from "@/lib/usv/types";
-
-interface Props {
-  grades: Grade[];
-}
 
 function gradeColor(nota: string): string {
   const n = parseFloat(nota);
-  if (isNaN(n) || nota === "") return "text-muted-foreground";
-  if (n >= 9) return "text-emerald-500 dark:text-emerald-400";
-  if (n >= 7) return "text-sky-500 dark:text-sky-400";
-  if (n >= 5) return "text-amber-500 dark:text-amber-400";
-  return "text-red-500 dark:text-red-400";
+  if (isNaN(n) || nota === "") return "text-muted-foreground/30";
+  if (n >= 9) return "text-chart-2/80";
+  if (n >= 7) return "text-primary/80";
+  if (n >= 5) return "text-chart-3/80";
+  return "text-destructive/70";
 }
 
-function GradeBadge({ value, estimated }: { value: string; estimated?: boolean }) {
-  if (!value)
-    return <span className="text-muted-foreground/40">—</span>;
-  return (
-    <span className={`font-medium tabular-nums ${gradeColor(value)} ${estimated ? "opacity-60 italic" : ""}`}>
-      {value}
-      {estimated && <span className="text-[10px] ml-0.5">~</span>}
-    </span>
-  );
-}
+export function GradeTable({ grades }: { grades: Grade[] }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-export function GradeTable({ grades }: Props) {
-  if (grades.length === 0) {
+  if (grades.length === 0)
     return (
       <div className="py-16 text-center text-muted-foreground text-sm">
         Nicio materie găsită.
       </div>
     );
-  }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="text-left py-2.5 px-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-              Materie
-            </th>
-            <th className="text-center py-2.5 px-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-              Sesiune
-            </th>
-            <th className="text-center py-2.5 px-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-              Pondere
-            </th>
-            <th className="text-center py-2.5 px-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-              Curs
-            </th>
-            <th className="text-center py-2.5 px-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-              Lab
-            </th>
-            <th className="text-center py-2.5 px-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-              Finală
-            </th>
-            <th className="text-center py-2.5 px-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-              Credite
-            </th>
-            <th className="text-center py-2.5 px-3 font-medium text-muted-foreground text-xs uppercase tracking-wider whitespace-nowrap">
-              Puncte
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {grades.map((g, i) => {
-            const failed =
-              g.notaFinala && parseFloat(g.notaFinala) < 5 && !g.isEstimated;
-            return (
-              <tr
-                key={i}
-                className={`border-b border-border/50 transition-colors hover:bg-muted/30 ${
-                  failed ? "bg-red-500/5" : ""
-                }`}
-              >
-                <td className="py-3 px-3 font-medium text-foreground max-w-[280px]">
-                  <span className="line-clamp-2 leading-snug">{g.titlu}</span>
-                </td>
-                <td className="py-3 px-3 text-center">
-                  <span className="text-xs text-muted-foreground bg-muted/50 rounded px-1.5 py-0.5 whitespace-nowrap">
-                    {g.sesiune || "—"}
+    <div className="divide-y divide-border/50">
+      {grades.map((g, i) => {
+        const failed = g.notaFinala && parseFloat(g.notaFinala) < 5 && !g.isEstimated;
+        const isOpen = openIndex === i;
+        const hasDetails = g.sesiune || g.credite || g.puncte;
+        const hasSubGrades = g.notaCurs || g.notaSeminar;
+
+        return (
+          <div key={i} className={failed ? "bg-red-500/5" : ""}>
+            <button
+              onClick={() => setOpenIndex(isOpen ? null : i)}
+              className="w-full flex items-center gap-3 px-4 md:px-6 py-4 md:py-5 transition-colors hover:bg-muted/20 text-left"
+            >
+              {/* Subject name + sub-grades */}
+              <div className="flex-1 min-w-0">
+                <span className="text-[13px] font-medium text-foreground leading-snug truncate block">
+                  {g.titlu}
+                </span>
+                {hasSubGrades && (
+                  <span className="text-xs text-muted-foreground/60 mt-1 block tabular-nums">
+                    {[
+                      g.notaCurs ? `Curs ${g.notaCurs}` : null,
+                      g.notaSeminar ? `Lab ${g.notaSeminar}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join("  ·  ")}
                   </span>
-                </td>
-                <td className="py-3 px-3 text-center text-xs text-muted-foreground whitespace-nowrap">
-                  {g.pondere || "—"}
-                </td>
-                <td className="py-3 px-3 text-center">
-                  <GradeBadge value={g.notaCurs} />
-                </td>
-                <td className="py-3 px-3 text-center">
-                  <GradeBadge value={g.notaSeminar} />
-                </td>
-                <td className="py-3 px-3 text-center">
-                  <GradeBadge value={g.notaFinala} estimated={g.isEstimated} />
-                </td>
-                <td className="py-3 px-3 text-center text-muted-foreground">
-                  {g.credite || "—"}
-                </td>
-                <td className="py-3 px-3 text-center text-muted-foreground">
-                  {g.puncte || "—"}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                )}
+              </div>
+
+              {/* Chevron */}
+              {hasDetails && (
+                <ChevronRight
+                  size={14}
+                  className={`shrink-0 text-muted-foreground/30 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`}
+                />
+              )}
+
+              {/* Final grade */}
+              <span className={`shrink-0 w-12 text-right text-2xl font-bold tabular-nums leading-none ${gradeColor(g.notaFinala)}`}>
+                {g.notaFinala || "—"}
+              </span>
+            </button>
+
+            {/* Expandable detail row */}
+            {isOpen && hasDetails && (
+              <div className="px-4 md:px-6 py-3.5 border-t border-border/30 flex flex-wrap gap-x-6 gap-y-2">
+                {g.sesiune && (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground/50">Sesiune</span>
+                    <span className="text-sm font-medium text-foreground">{g.sesiune}</span>
+                  </div>
+                )}
+                {g.credite && (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground/50">Credite</span>
+                    <span className="text-sm font-medium text-foreground">{g.credite}</span>
+                  </div>
+                )}
+                {g.puncte && (
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground/50">Puncte</span>
+                    <span className="text-sm font-medium text-foreground">{g.puncte}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
