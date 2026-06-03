@@ -26,6 +26,7 @@ export interface ClassEntry {
   fullRoom: string;
   fullInstructor: string;
   weekPattern: WeekPattern;
+  groupCode?: string;
 }
 
 export interface Timetable {
@@ -34,12 +35,6 @@ export interface Timetable {
   classes: ClassEntry[];
   hourSlots: number[];
   activeDays: number[];
-}
-
-export interface Instructor {
-  id: string;
-  name: string;
-  facultyId: number;
 }
 
 export interface SavedGroup {

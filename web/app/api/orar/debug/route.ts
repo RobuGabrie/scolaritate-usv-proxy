@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseTimetable, parseInstructors, matchInstructor } from "@/lib/orar/parser";
+import { parseTimetable } from "@/lib/orar/parser";
 import { currentAcademicYearParam } from "@/lib/orar/academicYear";
 
 const ORAR_BASE = "https://orar.usv.ro/orar/vizualizare";
@@ -8,33 +8,6 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const id = searchParams.get("id");
   const format = searchParams.get("format") ?? "parsed";
-
-  // --- Instructor list debug ---
-  if (format === "instructors") {
-    const facultyId = parseInt(searchParams.get("facultyId") ?? "1");
-    const sem = parseInt(searchParams.get("sem") ?? "2");
-    const an = currentAcademicYearParam();
-    const url = `${ORAR_BASE}/orarUp2.php?facultateID=${facultyId}&an=${an}&sem=${sem}`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0", "Accept-Language": "ro-RO,ro;q=0.9" },
-      cache: "no-store",
-    });
-    if (!res.ok) return NextResponse.json({ error: `orarUp2 status ${res.status}` }, { status: 502 });
-    const html = await res.text();
-    const instructors = parseInstructors(html, facultyId);
-    const name = searchParams.get("name");
-    const match = name ? matchInstructor(name, instructors) : null;
-    const cadreMatch = html.match(/name=['"]cadreL['"][^>]*>([\s\S]*?)<\/select>/i);
-    return NextResponse.json({
-      url,
-      instructorCount: instructors.length,
-      first10: instructors.slice(0, 10),
-      matchFor: name ?? null,
-      match,
-      cadreSelectFound: !!cadreMatch,
-      cadreSelectSnippet: cadreMatch?.[0]?.slice(0, 500) ?? null,
-    });
-  }
 
   // --- Instructor timetable debug ---
   if (format === "instructor-timetable") {

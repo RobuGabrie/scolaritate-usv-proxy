@@ -42,9 +42,10 @@ export function ClassBlock({ entry, compact, onInstructorClick }: Props) {
           onInstructorClick ? (
             <button
               onClick={(e) => { e.stopPropagation(); onInstructorClick(instructor); }}
-              className="text-[9px] text-muted-foreground truncate leading-none mt-auto text-left hover:text-foreground transition-colors"
+              className="flex items-center gap-0.5 mt-auto text-left group/btn"
             >
-              {instructor}
+              <svg className="shrink-0 text-primary/60 group-hover/btn:text-primary transition-colors" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              <span className="text-[9px] text-primary/70 group-hover/btn:text-primary truncate leading-none transition-colors">{instructor}</span>
             </button>
           ) : (
             <p className="text-[9px] text-muted-foreground truncate leading-none mt-auto">{instructor}</p>
@@ -73,9 +74,11 @@ export function ClassBlock({ entry, compact, onInstructorClick }: Props) {
           onInstructorClick ? (
             <button
               onClick={(e) => { e.stopPropagation(); onInstructorClick(instructor); }}
-              className="text-[11px] text-muted-foreground truncate leading-none text-left hover:text-foreground hover:underline transition-colors"
+              className="flex items-center gap-1 text-left group/btn w-full"
+              title="Vezi orarul profesorului"
             >
-              {instructor}
+              <svg className="shrink-0 text-primary/60 group-hover/btn:text-primary transition-colors" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              <span className="text-[11px] text-primary/80 group-hover/btn:text-primary group-hover/btn:underline truncate leading-none font-medium transition-colors">{instructor}</span>
             </button>
           ) : (
             <p className="text-[11px] text-muted-foreground truncate leading-none">{instructor}</p>
@@ -83,6 +86,9 @@ export function ClassBlock({ entry, compact, onInstructorClick }: Props) {
         )}
         {room && (
           <p className="text-[11px] text-muted-foreground/70 truncate leading-none">{room}</p>
+        )}
+        {entry.groupCode && (
+          <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase leading-none">{entry.groupCode}</span>
         )}
         {week && (
           <span className="text-[10px] font-medium text-muted-foreground/60 leading-none">{week}</span>

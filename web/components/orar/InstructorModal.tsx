@@ -29,28 +29,22 @@ export function InstructorModal({ instructorName, facultyId, semester, onClose }
     setError(null);
     setTimetable(null);
 
-    async function load() {
-      try {
-        const matchRes = await fetch(
-          `/api/orar/instructors?facultyId=${facultyId}&sem=${semester}&name=${encodeURIComponent(instructorName)}`
-        );
-        const matchData = await matchRes.json();
-        if (!matchData.instructor) throw new Error("Profesorul nu a fost găsit în baza de date.");
-
-        const ttRes = await fetch(
-          `/api/orar/timetable?id=${matchData.instructor.id}&sem=${semester}&mode=instructor`
-        );
-        const ttData = await ttRes.json();
-        if (ttData.error) throw new Error(ttData.error);
-        if (!cancelled) setTimetable(ttData);
-      } catch (e) {
+    fetch(
+      `/api/orar/instructor-schedule?name=${encodeURIComponent(instructorName)}&facultyId=${facultyId}&sem=${semester}`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.error) throw new Error(data.error);
+        setTimetable(data);
+      })
+      .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "Eroare necunoscută");
-      } finally {
+      })
+      .finally(() => {
         if (!cancelled) setLoading(false);
-      }
-    }
+      });
 
-    load();
     return () => { cancelled = true; };
   }, [instructorName, facultyId, semester]);
 
@@ -83,8 +77,9 @@ export function InstructorModal({ instructorName, facultyId, semester, onClose }
         {/* Body */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {loading ? (
-            <div className="flex-1 flex items-center justify-center py-16">
-              <p className="text-[13px] text-muted-foreground animate-pulse">Se încarcă orarul…</p>
+            <div className="flex-1 flex flex-col items-center justify-center py-16 gap-2">
+              <p className="text-[13px] text-muted-foreground animate-pulse">Se agreg orarul din toate grupele…</p>
+              <p className="text-[11px] text-muted-foreground/50">Poate dura câteva secunde</p>
             </div>
           ) : error ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16 gap-2">
@@ -93,7 +88,9 @@ export function InstructorModal({ instructorName, facultyId, semester, onClose }
             </div>
           ) : !timetable || timetable.classes.length === 0 ? (
             <div className="flex-1 flex items-center justify-center py-16 text-center px-6">
-              <p className="text-[13px] text-muted-foreground">Nu există ore înregistrate pentru acest profesor.</p>
+              <p className="text-[13px] text-muted-foreground">
+                Nu au fost găsite ore pentru <span className="font-medium text-foreground">{instructorName}</span>.
+              </p>
             </div>
           ) : (
             <>

@@ -1,5 +1,5 @@
 import { parse } from "node-html-parser";
-import type { OrarGroup, ClassEntry, ClassType, Timetable, WeekPattern, Instructor } from "./types";
+import type { OrarGroup, ClassEntry, ClassType, Timetable, WeekPattern } from "./types";
 
 const ORAR_BASE = "https://orar.usv.ro/orar/vizualizare";
 
@@ -193,24 +193,8 @@ export function parseTimetable(html: string, groupId: string, semester: number):
   return { groupId, semester, classes, hourSlots, activeDays };
 }
 
-export function parseInstructors(html: string, facultyId: number): Instructor[] {
-  const root = parse(html);
-  const select = root.querySelector("select[name='cadreL']");
-  if (!select) return [];
-  return select
-    .querySelectorAll("option")
-    .map((opt): Instructor | null => {
-      const value = opt.getAttribute("value") ?? "";
-      const text = opt.text.trim();
-      if (!text || !value) return null;
-      const idMatch = value.match(/[?&]ID=(\d+)/i);
-      if (!idMatch) return null;
-      return { id: idMatch[1], name: text, facultyId };
-    })
-    .filter((i): i is Instructor => i !== null);
-}
-
-const TITLE_RE = /\b(prof|conf|lect|asist|dr|univ|ing|dipl|stud)\.?\b/gi;
+// Strips academic titles and punctuation, keeps only words >= 3 chars
+const TITLE_RE = /\b(prof|conf|lect|asist|dr|univ|ing|dipl|stud|sl|as|sef)\.?\b/gi;
 
 function normalizeName(s: string): string[] {
   return s
@@ -218,51 +202,77 @@ function normalizeName(s: string): string[] {
     .replace(TITLE_RE, "")
     .replace(/[^a-zăâîșț\s]/g, " ")
     .split(/\s+/)
-    .filter((w) => w.length > 1);
+    .filter((w) => w.length >= 3);
 }
 
-export function matchInstructor(fullName: string, list: Instructor[]): Instructor | null {
-  if (!fullName) return null;
-  const target = normalizeName(fullName);
-  if (target.length === 0) return null;
+// A match requires at least one substantive word in common (last names are usually unique enough)
+function nameMatches(query: string, candidate: string): boolean {
+  const q = normalizeName(query);
+  const c = normalizeName(candidate);
+  if (q.length === 0 || c.length === 0) return false;
+  return q.some((w) => c.includes(w));
+}
 
-  let best: Instructor | null = null;
-  let bestScore = 0;
+// Same physical class (same day/hour/room/subject) recorded across multiple groups → keep one
+function deduplicateClasses(classes: ClassEntry[]): ClassEntry[] {
+  const seen = new Map<string, ClassEntry>();
+  for (const cls of classes) {
+    const subject = cls.fullName || cls.shortName;
+    const room = cls.fullRoom || cls.room;
+    const weekKind = cls.weekPattern.kind;
+    const key = `${cls.day}-${cls.startHour}-${cls.rowspan}-${cls.type}-${subject}-${room}-${weekKind}`;
+    if (!seen.has(key)) {
+      seen.set(key, cls);
+    }
+  }
+  return [...seen.values()];
+}
 
-  for (const inst of list) {
-    const words = normalizeName(inst.name);
-    const common = target.filter((w) => words.includes(w)).length;
-    if (common > bestScore) {
-      bestScore = common;
-      best = inst;
+export async function fetchInstructorSchedule(
+  instructorName: string,
+  facultyId: number,
+  sem: number,
+): Promise<Timetable> {
+  const groups = await fetchGroups(facultyId, sem);
+  if (groups.length === 0) throw new Error("Nu s-au putut încărca grupele.");
+
+  const BATCH = 10;
+  const matchedClasses: ClassEntry[] = [];
+
+  for (let i = 0; i < groups.length; i += BATCH) {
+    const batch = groups.slice(i, i + BATCH);
+    const results = await Promise.allSettled(
+      batch.map((g) => fetchTimetable(g.id, sem)),
+    );
+    for (let j = 0; j < results.length; j++) {
+      const r = results[j];
+      if (r.status !== "fulfilled") continue;
+      const group = batch[j];
+      for (const cls of r.value.classes) {
+        const name = cls.fullInstructor || cls.instructor;
+        if (nameMatches(instructorName, name)) {
+          matchedClasses.push({ ...cls, groupCode: group.groupCode });
+        }
+      }
     }
   }
 
-  return bestScore >= 1 ? best : null;
-}
+  const deduplicated = deduplicateClasses(matchedClasses);
 
-export async function fetchInstructors(facultyId: number, sem: number): Promise<Instructor[]> {
-  const { currentAcademicYearParam } = await import("./academicYear");
-  const an = currentAcademicYearParam();
-  const url = `${ORAR_BASE}/orarUp2.php?facultateID=${facultyId}&an=${an}&sem=${sem}`;
-  const res = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0", "Accept-Language": "ro-RO,ro;q=0.9" },
-    next: { revalidate: 3600 },
-  });
-  if (!res.ok) throw new Error(`orar.usv.ro status ${res.status}`);
-  const html = await res.text();
-  return parseInstructors(html, facultyId);
-}
+  const hourSlots = [...new Set(deduplicated.map((c) => c.startHour))].sort(
+    (a, b) => a - b,
+  );
+  const activeDays = [...new Set(deduplicated.map((c) => c.day))].sort(
+    (a, b) => a - b,
+  );
 
-export async function fetchInstructorTimetable(instructorId: string, sem: number): Promise<Timetable> {
-  const url = `${ORAR_BASE}/orarSPG.php?ID=${instructorId}&mod=cadru&mod2=vizual&print=nu&back=`;
-  const res = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0", "Accept-Language": "ro-RO,ro;q=0.9" },
-    next: { revalidate: 1800 },
-  });
-  if (!res.ok) throw new Error(`orar.usv.ro status ${res.status}`);
-  const html = await res.text();
-  return parseTimetable(html, instructorId, sem);
+  return {
+    groupId: `instructor:${instructorName}`,
+    semester: sem,
+    classes: deduplicated,
+    hourSlots,
+    activeDays,
+  };
 }
 
 export async function fetchGroups(facultyId: number, sem: number): Promise<OrarGroup[]> {
