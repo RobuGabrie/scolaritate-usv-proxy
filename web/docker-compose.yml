@@ -1,0 +1,36 @@
+services:
+  vpn:
+    image: ubergarm/l2tp-ipsec-vpn-client
+    privileged: true
+    ports:
+      - "3000:3000"
+    environment:
+      VPN_SERVER_IPorFQDN: vpn.usv.ro
+      VPN_PSK: ${VPN_PSK}
+      VPN_USERNAME: ${VPN_USERNAME}
+      VPN_PASSWORD: ${VPN_PASSWORD}
+    volumes:
+      - /lib/modules:/lib/modules:ro
+    devices:
+      - /dev/ppp
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.default.rp_filter=0
+    healthcheck:
+      test: ["CMD", "ping", "-c1", "-W3", "scolaritate.usv.ro"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  web:
+    build: .
+    network_mode: "service:vpn"
+    depends_on:
+      vpn:
+        condition: service_healthy
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+    restart: unless-stopped

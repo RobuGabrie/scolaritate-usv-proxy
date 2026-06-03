@@ -44,6 +44,10 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.5);
   --radius-2xl: calc(var(--radius) * 2);
+
+  /* Login page animations — usable as animate-* Tailwind utilities */
+  --animate-word-up:    wordUp 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  --animate-login-fade: loginFadeIn 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 /* ── Linear-inspired tokens ── */
@@ -84,43 +88,26 @@
   --chart-5: #4aa3c7;
 }
 
-/* ── Dark mode — valorile exacte din Linear CSS ── */
+/* ── Dark mode ── */
 .dark {
-  /* Backgrounds — suprafețe ierarhice */
   --background:         #14161a;
   --card:               #1b1e24;
   --popover:            #181b20;
-
   --card-foreground:    #e7e9ee;
   --popover-foreground: #e7e9ee;
   --foreground:         #e7e9ee;
-
-  /* Primary — Linear indigo */
   --primary:            #6d78d5;
   --primary-foreground: #fefeff;
-
-  /* Secondary / Muted */
   --secondary:          #23262d;
   --secondary-foreground: #d3d6de;
-
   --muted:              #23262d;
   --muted-foreground:   #9aa0aa;
-
-  /* Accent */
   --accent:             #6d78d5;
   --accent-foreground:  #fefeff;
-
-  /* Destructive */
   --destructive:        #f2545b;
-
-  /* Borders */
   --border:             #2b2f36;
   --input:              #2b2f36;
-
-  /* Ring / Focus */
   --ring:               #6d78d5;
-
-  /* Sidebar */
   --sidebar:            #171a1f;
   --sidebar-foreground: #e7e9ee;
   --sidebar-primary:    #6d78d5;
@@ -129,8 +116,6 @@
   --sidebar-accent-foreground: #d3d6de;
   --sidebar-border:     #262a31;
   --sidebar-ring:       #6d78d5;
-
-  /* Charts */
   --chart-1: #6d78d5;
   --chart-2: #4bbd8c;
   --chart-3: #f3b44e;
@@ -138,10 +123,25 @@
   --chart-5: #4aa3c7;
 }
 
-@keyframes fadeInDown {
+/* ── Login page animations ── */
+
+/* Word-by-word text reveal: each word slides up from below its overflow-hidden container */
+@keyframes wordUp {
+  from {
+    transform: translateY(115%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* General element entrance — fade + subtle rise */
+@keyframes loginFadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -149,27 +149,75 @@
   }
 }
 
+/* Background orb — slow gentle pulse */
+@keyframes orbPulse {
+  0%, 100% { opacity: 0.55; transform: translate(-50%, 0) scale(1);    }
+  50%       { opacity: 0.80; transform: translate(-50%, -16px) scale(1.03); }
+}
+
+/* Headline gradient shimmer — sweeps left-to-right endlessly */
+@keyframes gradShimmer {
+  from { background-position: 0%   center; }
+  to   { background-position: 200% center; }
+}
+
+/* Feature chip bounce-in */
+@keyframes chipIn {
+  from { opacity: 0; transform: scale(0.88) translateY(6px); }
+  60%  { transform: scale(1.04) translateY(-1px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Fixed background glow orb — no inline styles needed in JSX */
+.login-orb {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: 900px;
+  height: 500px;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 0%,
+    color-mix(in oklch, var(--primary) 13%, transparent) 0%,
+    transparent 70%
+  );
+  animation: orbPulse 8s ease-in-out infinite;
+}
+
+/* Gradient text: subtle color sweep on the headline accent line */
+.login-grad-text {
+  background: linear-gradient(
+    90deg,
+    var(--foreground) 0%,
+    color-mix(in oklch, var(--primary) 60%, var(--foreground)) 45%,
+    var(--foreground) 90%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradShimmer 6s linear infinite;
+}
+
+/* Respect reduced-motion: collapse all login animations to instant */
+@media (prefers-reduced-motion: reduce) {
+  .login-grad-text {
+    background: none;
+    -webkit-text-fill-color: inherit;
+    color: inherit;
+    animation: none;
+  }
+}
+
+/* ── Utility ── */
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .animate-fade-in-down {
   animation: fadeInDown 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.1s both;
-}
-
-.login-swap {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.42s cubic-bezier(0.22, 0.61, 0.36, 1),
-    transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.login-swap[data-phase="out"] {
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .login-swap {
-    transition: none;
-  }
 }
 
 @layer base {
