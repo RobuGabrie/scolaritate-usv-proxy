@@ -1,4 +1,4 @@
-import type { Grade } from "./usv/types";
+import type { Grade } from "./types";
 
 export interface GradeStats {
   mediaEcts: number;

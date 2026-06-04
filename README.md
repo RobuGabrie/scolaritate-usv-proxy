@@ -1,129 +1,70 @@
-# Scolaritate USV — Proxy & Student Portal
+# Scolaritate+
 
-A modern student portal for [Universitatea "Ștefan cel Mare" din Suceava (USV)](https://usv.ro) that acts as a proxy layer over the legacy PeopleSoft academic system. Students can view grades, track GPA, and simulate future averages — without ever touching the clunky original interface.
+A faster, mobile-friendly frontend for USV's student portal — no VPN required on your device.
 
----
+USV's portal (scolaritate.usv.ro) only works on campus or over VPN, runs on legacy TLS 1.0, and hasn't been redesigned since roughly 2009. This app runs on a server that's already inside the university network, proxies the requests, and gives you a clean interface for the things you actually check: grades, timetable, and profile.
 
-## What this is
+## What it does
 
-USV's academic system runs on a legacy PeopleSoft stack accessible only on the campus network (or VPN). This app proxies those requests server-side and exposes a clean, modern UI for students.
+- **Grades** — full grade list with semester filtering and a calculator that shows what you need in remaining subjects to hit a target average
+- **Timetable** — weekly and daily views, pinch to zoom on mobile, tap a professor to see their full schedule across all groups
+- **Profile** — basic academic info pulled straight from the student system
 
-**Current features:**
-- Secure login with USV credentials (credentials are never stored — only a short-lived JWT session)
-- Grades dashboard with per-semester filters
-- ECTS-weighted GPA calculation
-- Grade simulator — "what average do I need on remaining courses to hit X?"
+Everything is read-only. No data is stored beyond your session cookie, which expires after 8 hours.
 
-**Planned:**
-- Exam schedule viewer
-- Timetable (orar)
-- Student profile
+## How it works
 
----
+Next.js 15 frontend with server-side API routes that proxy to USV on your behalf. When you log in, the app authenticates against USV's PeopleSoft system using `curl` (legacy TLS 1.0 is required — their server hasn't been updated). Your session cookies get signed into a JWT stored in an httpOnly cookie on your browser. All subsequent requests go server-side.
 
-## Architecture
+The VPN connection lives in a Docker sidecar container. Your device never needs to be on the university network.
 
-```
-Browser  →  Next.js (App Router)
-                ├── /app/(dashboard)   — React UI
-                ├── /app/api/auth      — Login / logout proxy
-                └── /app/api/usv       — USV PeopleSoft scraping
-```
+## Running it
 
-The app is a **full-stack Next.js monolith** — no separate backend is needed. API routes act as the proxy layer:
-
-1. Login request hits `/api/auth/login`
-2. Server-side curl (with TLSv1.0, required for the legacy system) authenticates against USV
-3. USV session cookies are encrypted into a JWT and stored as an `httpOnly` cookie
-4. Subsequent requests use the JWT to re-authenticate with USV and fetch data
-
-> Credentials are embedded in the JWT only for the duration of the session (8 hours). Nothing is persisted to a database.
-
-### Will it ever need a separate backend?
-
-Not for the current feature set. If a native mobile app is built later, the Next.js API routes can be extracted into a standalone service (Hono/Fastify). For now, everything lives here.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS v4 + shadcn/ui |
-| Auth | JWT via `jose`, `httpOnly` cookies |
-| USV integration | `curl` (TLSv1.0 legacy support) + `node-html-parser` |
-| Icons | Lucide React |
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- `curl` available on the system (used server-side for USV requests)
-- Access to USV network (campus or VPN)
-
-### Install & run
+You need Docker and a machine that can reach the USV network (or credentials for the VPN sidecar to handle it).
 
 ```bash
-cd web
-npm install
-cp .env.local.example .env.local   # fill in JWT_SECRET
-npm run dev
+cp .env.example .env
+# edit .env with your values
+docker compose up -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Runs on port 3000. In production, a `cloudflared` container exposes it via a Cloudflare Tunnel so no ports need to be open on the host.
 
 ### Environment variables
 
-| Variable | Description |
-|---|---|
-| `JWT_SECRET` | Secret key for signing session JWTs (generate with `openssl rand -base64 32`) |
+| Variable | What it's for |
+|----------|---------------|
+| `VPN_USERNAME` | USV account used for the VPN connection (`name@student.usv.ro`) |
+| `VPN_PASSWORD` | Password for that account |
+| `JWT_SECRET` | Random secret for signing session tokens — `openssl rand -base64 32` |
+| `CLOUDFLARE_TUNNEL_TOKEN` | From Cloudflare Zero Trust → Tunnels, if you're using that |
+| `GRAFANA_PASSWORD` | Password for the Grafana admin account (default: `changeme` — change it) |
 
----
+The VPN account doesn't need to be the same one students log in with. It just needs to be a valid USV account to bring up the OpenVPN tunnel.
 
-## Project Structure
+## Monitoring
 
-```
-apps/
-├── web/                        # Next.js application
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── auth/           # Login & logout endpoints
-│   │   │   └── usv/            # Grades & debug endpoints
-│   │   ├── (auth)/login/       # Login page
-│   │   ├── (dashboard)/        # Protected dashboard pages
-│   │   │   ├── note/           # Grades view (implemented)
-│   │   │   ├── examene/        # Exams (planned)
-│   │   │   ├── orar/           # Schedule (planned)
-│   │   │   └── profil/         # Profile (planned)
-│   │   └── disclaimer/         # Disclaimer page
-│   ├── components/
-│   │   ├── grades/             # GradesView, GradeTable
-│   │   ├── layout/             # Sidebar navigation
-│   │   └── ui/                 # shadcn/ui primitives
-│   ├── lib/
-│   │   ├── usv/                # USV integration (auth, client, parser, types)
-│   │   ├── gradeCalculator.ts  # GPA & simulation logic
-│   │   └── session.ts          # JWT session management
-│   └── middleware.ts           # Route protection
-└── .github/workflows/ci.yml    # CI: lint + type-check
-```
+Grafana, Loki, and Promtail run as part of the Docker Compose stack. Promtail reads container logs via the Docker socket and ships them to Loki. Grafana sits on top with a dashboard showing log volume, login attempts, rate limit hits, errors, and VPN logs.
 
----
+Grafana runs on port 3001. Log in with `admin` / whatever you set `GRAFANA_PASSWORD` to. The dashboard is pre-provisioned — it'll be there as soon as containers are up.
 
-## Security Notes
+## Stack
 
-- USV credentials are **never logged or stored**
-- Session JWTs are signed with `HS256` and expire after 8 hours
-- Cookies are `httpOnly`, `secure`, and `sameSite=lax`
-- The debug endpoint (`/api/usv/debug`) should be disabled in production
+- Next.js 15 (App Router)
+- Tailwind CSS v4
+- `jose` for JWT sessions
+- `curl` for proxying to PeopleSoft (legacy TLS 1.0)
+- `node-html-parser` for timetable parsing from orar.usv.ro
+- Docker + OpenVPN sidecar + Cloudflare Tunnel
 
----
+## Caveats
 
-## License
+USV's PeopleSoft is slow. Grade pages can take 5–8 seconds to load — that's their server, not this app. The timetable (orar.usv.ro) is a public endpoint and loads fast.
 
-MIT
+If the VPN sidecar disconnects, everything breaks until it reconnects. The healthcheck in docker-compose handles automatic restarts.
+
+This runs on a single server. Don't expect it to hold up if the entire student body hits it simultaneously — the upstream USV system would rate-limit the server IP well before that.
+
+## Disclaimer
+
+Unofficial student project. Not affiliated with USV. Your credentials go directly to USV's servers — this app just handles the TLS/VPN layer so you don't have to set it up yourself.

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import type { Grade } from "@/lib/usv/types";
 import type { YearOption } from "@/lib/usv/grades";
 import { GradeTable } from "./GradeTable";
-import { calcStats, simulateWithHypotheticals } from "@/lib/gradeCalculator";
+import { calcStats, simulateWithHypotheticals } from "@/lib/usv/gradeCalculator";
 
 interface Props {
   grades: Grade[];
