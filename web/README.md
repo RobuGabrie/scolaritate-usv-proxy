@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Școlaritate
 
-## Getting Started
+A faster, mobile-friendly frontend for USV's student portal — no VPN required on your device.
 
-First, run the development server:
+USV's portal (scolaritate.usv.ro) only works on campus or over VPN, runs on legacy TLS 1.0, and hasn't been redesigned since roughly 2009. This app runs on a server that's already inside the university network, proxies the requests, and gives you a clean interface for the things you actually check: grades, timetable, and profile.
+
+## What it does
+
+- **Grades** — full grade list with semester filtering and a calculator that shows what you need in remaining subjects to hit a target average
+- **Timetable** — weekly and daily views, pinch to zoom on mobile, tap a professor to see their full schedule across all groups
+- **Profile** — basic academic info pulled straight from the student system
+
+Everything is read-only. No data is stored beyond your session cookie, which expires after 8 hours.
+
+## How it works
+
+Next.js 15 frontend with server-side API routes that proxy to USV on your behalf. When you log in, the app authenticates against USV's PeopleSoft system using `curl` (legacy TLS 1.0 is required — their server hasn't been updated). Your session cookies get signed into a JWT stored in an httpOnly cookie on your browser. All subsequent requests go server-side.
+
+The VPN connection lives in a Docker sidecar container. Your device never needs to be on the university network.
+
+## Running it
+
+You need Docker and a machine that can reach the USV network (or credentials for the VPN sidecar to handle it).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
+# edit .env with your values
+docker compose up -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Runs on port 3000. In production, a `cloudflared` container exposes it via a Cloudflare Tunnel so no ports need to be open on the host.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | What it's for |
+|----------|---------------|
+| `VPN_USERNAME` | USV account used for the VPN connection (`name@student.usv.ro`) |
+| `VPN_PASSWORD` | Password for that account |
+| `JWT_SECRET` | Random secret for signing session tokens — `openssl rand -base64 32` |
+| `CLOUDFLARE_TUNNEL_TOKEN` | From Cloudflare Zero Trust → Tunnels, if you're using that |
 
-## Learn More
+The VPN account doesn't need to be the same one students log in with. It just needs to be a valid USV account to bring up the OpenVPN tunnel.
 
-To learn more about Next.js, take a look at the following resources:
+## Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Next.js 15 (App Router)
+- Tailwind CSS v4
+- `jose` for JWT sessions
+- `curl` for proxying to PeopleSoft (legacy TLS 1.0)
+- `node-html-parser` for timetable parsing from orar.usv.ro
+- Docker + OpenVPN sidecar + Cloudflare Tunnel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Caveats
 
-## Deploy on Vercel
+USV's PeopleSoft is slow. Grade pages can take 5–8 seconds to load — that's their server, not this app. The timetable (orar.usv.ro) is a public endpoint and loads fast.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If the VPN sidecar disconnects, everything breaks until it reconnects. The healthcheck in docker-compose handles automatic restarts.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This runs on a single server. Don't expect it to hold up if the entire student body hits it simultaneously — the upstream USV system would rate-limit the server IP well before that.
+
+## Disclaimer
+
+Unofficial student project. Not affiliated with USV. Your credentials go directly to USV's servers — this app just handles the TLS/VPN layer so you don't have to set it up yourself.
