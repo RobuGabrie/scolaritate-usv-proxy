@@ -38,8 +38,15 @@ Runs on port 3000. In production, a `cloudflared` container exposes it via a Clo
 | `VPN_PASSWORD` | Password for that account |
 | `JWT_SECRET` | Random secret for signing session tokens — `openssl rand -base64 32` |
 | `CLOUDFLARE_TUNNEL_TOKEN` | From Cloudflare Zero Trust → Tunnels, if you're using that |
+| `GRAFANA_PASSWORD` | Password for the Grafana admin account (default: `changeme` — change it) |
 
 The VPN account doesn't need to be the same one students log in with. It just needs to be a valid USV account to bring up the OpenVPN tunnel.
+
+## Monitoring
+
+Grafana, Loki, and Promtail run as part of the Docker Compose stack. Promtail reads container logs via the Docker socket and ships them to Loki. Grafana sits on top with a dashboard showing log volume, login attempts, rate limit hits, errors, and VPN logs.
+
+Grafana runs on port 3001. Log in with `admin` / whatever you set `GRAFANA_PASSWORD` to. The dashboard is pre-provisioned — it'll be there as soon as containers are up.
 
 ## Stack
 

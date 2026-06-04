@@ -1,0 +1,120 @@
+{
+  "title": "Școlaritate",
+  "uid": "scolaritate-main",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Log volume by service",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "loki" },
+          "expr": "sum by (service) (rate({service=~\"web|vpn|tunnel\"}[2m]))",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "lineWidth": 2, "fillOpacity": 10 },
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Login attempts",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "loki" },
+          "expr": "sum(rate({service=\"web\"} |= \"/api/auth/login\" [2m]))",
+          "legendFormat": "logins/sec"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Rate limit hits (429)",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 6, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "loki" },
+          "expr": "sum(rate({service=\"web\"} |= \"429\" [2m]))",
+          "legendFormat": "429/sec"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "orange", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Errors",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 6, "w": 8, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "loki" },
+          "expr": "sum(rate({service=\"web\"} |~ \"(?i)error\" [2m]))",
+          "legendFormat": "errors/sec"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "red", "mode": "fixed" }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "VPN logs",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "loki" },
+          "expr": "{service=\"vpn\"}",
+          "maxLines": 100
+        }
+      ],
+      "options": { "showTime": true, "wrapLogMessage": true }
+    },
+    {
+      "id": 6,
+      "title": "Recent errors",
+      "type": "logs",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": { "type": "loki" },
+          "expr": "{service=\"web\"} |~ \"(?i)(error|exception|failed|500|503)\"",
+          "maxLines": 100
+        }
+      ],
+      "options": { "showTime": true, "wrapLogMessage": true }
+    },
+    {
+      "id": 7,
+      "title": "All app logs",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 10 },
+      "targets": [
+        {
+          "datasource": { "type": "loki" },
+          "expr": "{service=\"web\"}",
+          "maxLines": 200
+        }
+      ],
+      "options": { "showTime": true, "wrapLogMessage": false, "sortOrder": "Descending" }
+    }
+  ]
+}
