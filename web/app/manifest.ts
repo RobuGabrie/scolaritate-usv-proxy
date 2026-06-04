@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Portal USV",
-    short_name: "Portal USV",
+    name: "Scolaritate+",
+    short_name: "Scolaritate+",
     description: "Note, orar și profil pentru studenții USV — fără VPN",
     start_url: "/",
     display: "standalone",

@@ -30,8 +30,8 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Portal USV — Note, orar și profil fără VPN",
-    template: "%s · Portal USV",
+    default: "Scolaritate+ — Note, orar și profil fără VPN",
+    template: "%s · Scolaritate+",
   },
   description:
     "Note, orar și profil pentru studenții USV — fără VPN, de pe orice dispozitiv.",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     "portal studenti Suceava",
     "note facultate USV",
   ],
-  authors: [{ name: "Portal USV" }],
+  authors: [{ name: "Scolaritate+" }],
   robots: {
     index: true,
     follow: true,
@@ -56,25 +56,25 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ro_RO",
     url: APP_URL,
-    siteName: "Portal USV",
-    title: "Portal USV — Note, orar și profil fără VPN",
+    siteName: "Scolaritate+",
+    title: "Scolaritate+ — Note, orar și profil fără VPN",
     description:
       "Note, orar și profil pentru studenții USV — fără VPN, de pe orice dispozitiv.",
-    images: [{ url: "/opengraph-image", alt: "Portal USV — interfață modernă pentru studenții USV" }],
+    images: [{ url: "/opengraph-image", alt: "Scolaritate+ — interfață modernă pentru studenții USV" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Portal USV — Note, orar și profil fără VPN",
+    title: "Scolaritate+ — Note, orar și profil fără VPN",
     description:
       "Note, orar și profil pentru studenții USV — fără VPN, de pe orice dispozitiv.",
-    images: [{ url: "/opengraph-image", alt: "Portal USV — interfață modernă pentru studenții USV" }],
+    images: [{ url: "/opengraph-image", alt: "Scolaritate+ — interfață modernă pentru studenții USV" }],
   },
 };
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Portal USV",
+  name: "Scolaritate+",
   url: APP_URL,
   description: "Note, orar și profil pentru studenții USV — fără VPN, de pe orice dispozitiv.",
   applicationCategory: "EducationApplication",

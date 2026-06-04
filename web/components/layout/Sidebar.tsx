@@ -90,7 +90,7 @@ export function Sidebar({ displayName, userId }: SidebarProps) {
         <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
           <span className="text-[10px] font-bold text-primary-foreground">U</span>
         </div>
-        <span className="text-base font-semibold tracking-tight">Portal USV</span>
+        <span className="text-base font-semibold tracking-tight">Scolaritate+</span>
       </div>
 
       <nav className="space-y-0.5">

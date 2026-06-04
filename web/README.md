@@ -1,4 +1,4 @@
-# Portal USV
+# Scolaritate+
 
 A faster, mobile-friendly frontend for USV's student portal — no VPN required on your device.
 

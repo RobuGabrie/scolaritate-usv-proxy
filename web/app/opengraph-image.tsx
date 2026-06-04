@@ -50,7 +50,7 @@ export default function OgImage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <span style={{ color: "#ffffff", fontSize: 64, fontWeight: 700, lineHeight: 1, letterSpacing: "-2px" }}>
-            Portal USV
+            Scolaritate+
           </span>
           <span style={{ color: "#71717a", fontSize: 28, fontWeight: 400, lineHeight: 1.3 }}>
             Note · Orar · Profil — fără VPN, de pe orice dispozitiv
