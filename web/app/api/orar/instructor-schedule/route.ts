@@ -1,7 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { fetchInstructorSchedule } from "@/lib/orar/parser";
+import { checkRateLimit, getClientIp, LIMITS } from "@/lib/ratelimit";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
+  const ip = getClientIp(req);
+  if (!checkRateLimit(`orar:${ip}`, LIMITS.orar)) {
+    return NextResponse.json({ error: "Prea multe cereri. Încearcă din nou în câteva minute." }, { status: 429 });
+  }
+
   const { searchParams } = new URL(req.url);
   const name = searchParams.get("name");
   const facultyId = parseInt(searchParams.get("facultyId") ?? "");

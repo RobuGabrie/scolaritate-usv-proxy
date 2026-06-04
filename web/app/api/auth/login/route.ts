@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loginToUSV } from "@/lib/usv/auth";
 import { createSession, setSessionCookie } from "@/lib/session";
+import { checkRateLimit, getClientIp, LIMITS } from "@/lib/ratelimit";
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+  if (!checkRateLimit(`login:${ip}`, LIMITS.login)) {
+    return NextResponse.json(
+      { error: "Prea multe încercări. Încearcă din nou peste 15 minute." },
+      { status: 429, headers: { "Retry-After": "900" } }
+    );
+  }
+
   const { userid, pwd } = await req.json();
 
   if (!userid || !pwd) {

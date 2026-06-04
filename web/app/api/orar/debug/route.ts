@@ -5,6 +5,10 @@ import { currentAcademicYearParam } from "@/lib/orar/academicYear";
 const ORAR_BASE = "https://orar.usv.ro/orar/vizualizare";
 
 export async function GET(req: NextRequest) {
+  if (process.env.NODE_ENV !== "development") {
+    return new Response("Not found", { status: 404 });
+  }
+
   const { searchParams } = req.nextUrl;
   const id = searchParams.get("id");
   const format = searchParams.get("format") ?? "parsed";

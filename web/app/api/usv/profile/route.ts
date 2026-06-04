@@ -1,8 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { fetchProfile } from "@/lib/usv/profile";
+import { checkRateLimit, getClientIp, LIMITS } from "@/lib/ratelimit";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const ip = getClientIp(req);
+  if (!checkRateLimit(`usv:${ip}`, LIMITS.usv)) {
+    return NextResponse.json({ error: "Prea multe cereri. Încearcă din nou în câteva minute." }, { status: 429 });
+  }
+
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Neautentificat" }, { status: 401 });
 
