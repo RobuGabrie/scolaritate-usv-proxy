@@ -7,10 +7,7 @@ import type { Grade } from "@/lib/usv/types";
 function gradeColor(nota: string): string {
   const n = parseFloat(nota);
   if (isNaN(n) || nota === "") return "text-muted-foreground/30";
-  if (n >= 9) return "text-chart-2/80";
-  if (n >= 7) return "text-primary/80";
-  if (n >= 5) return "text-chart-3/80";
-  return "text-destructive/70";
+  return "text-foreground";
 }
 
 export function GradeTable({ grades }: { grades: Grade[] }) {
@@ -26,13 +23,12 @@ export function GradeTable({ grades }: { grades: Grade[] }) {
   return (
     <div className="divide-y divide-border/50">
       {grades.map((g, i) => {
-        const failed = g.notaFinala && parseFloat(g.notaFinala) < 5 && !g.isEstimated;
         const isOpen = openIndex === i;
         const hasDetails = g.sesiune || g.credite || g.puncte;
         const hasSubGrades = g.notaCurs || g.notaSeminar;
 
         return (
-          <div key={i} className={failed ? "bg-red-500/5" : ""}>
+          <div key={i}>
             <button
               onClick={() => setOpenIndex(isOpen ? null : i)}
               className="w-full flex items-center gap-3 px-4 md:px-6 py-4 md:py-5 transition-colors hover:bg-muted/20 text-left"

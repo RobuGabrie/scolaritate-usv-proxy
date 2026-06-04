@@ -42,10 +42,10 @@ export function ClassBlock({ entry, compact, onInstructorClick }: Props) {
           onInstructorClick ? (
             <button
               onClick={(e) => { e.stopPropagation(); onInstructorClick(instructor); }}
-              className="flex items-center gap-0.5 mt-auto text-left group/btn"
+              className="mt-auto self-start flex items-center gap-0.5 max-w-full text-left group/btn"
             >
-              <svg className="shrink-0 text-primary/60 group-hover/btn:text-primary transition-colors" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-              <span className="text-[9px] text-primary/70 group-hover/btn:text-primary truncate leading-none transition-colors">{instructor}</span>
+              <span className="text-[9px] text-muted-foreground underline underline-offset-2 decoration-muted-foreground/40 group-hover/btn:decoration-muted-foreground truncate leading-none transition-colors">{instructor}</span>
+              <svg className="shrink-0 text-muted-foreground/40" width="5" height="5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
             </button>
           ) : (
             <p className="text-[9px] text-muted-foreground truncate leading-none mt-auto">{instructor}</p>
@@ -69,30 +69,31 @@ export function ClassBlock({ entry, compact, onInstructorClick }: Props) {
       <p className="text-[13px] font-bold leading-tight line-clamp-2 text-foreground">{name}</p>
 
       {/* Instructor + room */}
-      <div className="mt-auto flex flex-col gap-0.5">
+      <div className="mt-auto flex flex-col gap-1">
         {instructor && (
           onInstructorClick ? (
             <button
               onClick={(e) => { e.stopPropagation(); onInstructorClick(instructor); }}
-              className="flex items-center gap-1 text-left group/btn w-full"
-              title="Vezi orarul profesorului"
+              className="self-start flex items-center gap-0.5 max-w-full text-left group/btn"
             >
-              <svg className="shrink-0 text-primary/60 group-hover/btn:text-primary transition-colors" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-              <span className="text-[11px] text-primary/80 group-hover/btn:text-primary group-hover/btn:underline truncate leading-none font-medium transition-colors">{instructor}</span>
+              <span className="text-[11px] text-muted-foreground underline underline-offset-2 decoration-muted-foreground/40 group-hover/btn:decoration-muted-foreground truncate leading-none transition-colors">{instructor}</span>
+              <svg className="shrink-0 text-muted-foreground/40" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
             </button>
           ) : (
             <p className="text-[11px] text-muted-foreground truncate leading-none">{instructor}</p>
           )
         )}
-        {room && (
-          <p className="text-[11px] text-muted-foreground/70 truncate leading-none">{room}</p>
-        )}
-        {entry.groupCode && (
-          <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase leading-none">{entry.groupCode}</span>
-        )}
-        {week && (
-          <span className="text-[10px] font-medium text-muted-foreground/60 leading-none">{week}</span>
-        )}
+        <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+          {room && (
+            <p className="text-[11px] text-muted-foreground/70 truncate leading-none">{room}</p>
+          )}
+          {entry.groupCode && (
+            <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase leading-none">{entry.groupCode}</span>
+          )}
+          {week && (
+            <span className="text-[10px] font-medium text-muted-foreground/60 leading-none">{week}</span>
+          )}
+        </div>
       </div>
     </div>
   );

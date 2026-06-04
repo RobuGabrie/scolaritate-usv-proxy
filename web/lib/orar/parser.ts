@@ -205,22 +205,27 @@ function normalizeName(s: string): string[] {
     .filter((w) => w.length >= 3);
 }
 
-// A match requires at least one substantive word in common (last names are usually unique enough)
+// Require at least 2 words to match — single common first names like "Elena" or "Cristina"
+// would otherwise cause false positives against completely unrelated professors.
 function nameMatches(query: string, candidate: string): boolean {
   const q = normalizeName(query);
   const c = normalizeName(candidate);
   if (q.length === 0 || c.length === 0) return false;
-  return q.some((w) => c.includes(w));
+  // Short candidate (e.g. abbreviated "Turcu C.") — just require the first word (surname)
+  if (c.length === 1) return c.includes(q[0]);
+  const matchCount = q.filter((w) => c.includes(w)).length;
+  return matchCount >= 2;
 }
 
-// Same physical class (same day/hour/room/subject) recorded across multiple groups → keep one
+// Same physical class recorded across multiple groups → keep one.
+// Room is intentionally excluded from the key: the same class can appear with slightly
+// different room strings across groups (e.g. "C002" vs "C002 corp A"), causing duplicates to slip through.
 function deduplicateClasses(classes: ClassEntry[]): ClassEntry[] {
   const seen = new Map<string, ClassEntry>();
   for (const cls of classes) {
     const subject = cls.fullName || cls.shortName;
-    const room = cls.fullRoom || cls.room;
     const weekKind = cls.weekPattern.kind;
-    const key = `${cls.day}-${cls.startHour}-${cls.rowspan}-${cls.type}-${subject}-${room}-${weekKind}`;
+    const key = `${cls.day}-${cls.startHour}-${cls.rowspan}-${cls.type}-${subject}-${weekKind}`;
     if (!seen.has(key)) {
       seen.set(key, cls);
     }

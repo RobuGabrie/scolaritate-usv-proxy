@@ -15,8 +15,8 @@ export interface CurlResult {
   ok: boolean;
 }
 
-const BASE_ARGS_FOLLOW = ["-sk", "--tlsv1.0", "-L"];  // follow redirects
-const BASE_ARGS_NOFOLLOW = ["-sk", "--tlsv1.0"];       // stop at first redirect
+const BASE_ARGS_FOLLOW = ["-sk", "--tlsv1.0", "-L", "--max-time", "15"];  // follow redirects
+const BASE_ARGS_NOFOLLOW = ["-sk", "--tlsv1.0", "--max-time", "15"];       // stop at first redirect
 
 const BASE_HEADERS = [
   "-H", "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",

@@ -3,6 +3,8 @@
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
+const SAVED_EMAIL_KEY = "usv_saved_email";
+
 /* ─── Icons ────────────────────────────────────────────────────────────────── */
 
 function IconGitHub() {
@@ -183,12 +185,16 @@ function StartStep({ onContinue }: { onContinue: () => void }) {
 function EmailStep({
   userid,
   setUserid,
+  rememberMe,
+  setRememberMe,
   error,
   onSubmit,
   onBack,
 }: {
   userid: string;
   setUserid: (v: string) => void;
+  rememberMe: boolean;
+  setRememberMe: (v: boolean) => void;
   error: string;
   onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void;
   onBack: () => void;
@@ -223,6 +229,16 @@ function EmailStep({
         />
         {error && <ErrorMsg msg={error} />}
       </div>
+
+      <label className="flex items-center gap-2.5 text-[12px] text-muted-foreground cursor-pointer select-none animate-login-fade [animation-delay:110ms]">
+        <input
+          type="checkbox"
+          checked={rememberMe}
+          onChange={(e) => setRememberMe(e.target.checked)}
+          className="w-4 h-4 rounded accent-foreground cursor-pointer"
+        />
+        Ține minte emailul
+      </label>
 
       <button
         type="submit"
@@ -331,13 +347,23 @@ type Step = "start" | "email" | "password";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("start");
-  const [userid, setUserid] = useState("");
+  const [step, setStep] = useState<Step>(() => {
+    if (typeof window === "undefined") return "start";
+    return localStorage.getItem(SAVED_EMAIL_KEY) ? "password" : "start";
+  });
+  const [userid, setUserid] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(SAVED_EMAIL_KEY) ?? "";
+  });
   const [pwd, setPwd] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !!localStorage.getItem(SAVED_EMAIL_KEY);
+  });
 
   const goTo = useCallback((next: Step) => {
     setIsExiting(true);
@@ -351,6 +377,11 @@ export default function LoginPage() {
   function handleEmailSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!userid.trim()) { setError("Introdu adresa de email."); return; }
+    if (rememberMe) {
+      localStorage.setItem(SAVED_EMAIL_KEY, userid.trim());
+    } else {
+      localStorage.removeItem(SAVED_EMAIL_KEY);
+    }
     goTo("password");
   }
 
@@ -390,6 +421,8 @@ export default function LoginPage() {
             <EmailStep
               userid={userid}
               setUserid={setUserid}
+              rememberMe={rememberMe}
+              setRememberMe={setRememberMe}
               error={error}
               onSubmit={handleEmailSubmit}
               onBack={() => goTo("start")}

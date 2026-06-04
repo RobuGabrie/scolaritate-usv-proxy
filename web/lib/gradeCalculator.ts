@@ -25,6 +25,22 @@ export interface SimulationResult {
   message: string;
 }
 
+export interface PendingSubjectCalc {
+  titlu: string;
+  credite: number;
+  hypothetical: number | null;
+  notaNecesara: number | null;
+}
+
+export interface HypotheticalSimResult {
+  possible: boolean;
+  targetMedia: number;
+  uniformMinimum: number | null;
+  pendingSubjects: PendingSubjectCalc[];
+  message: string;
+  allSet: boolean;
+}
+
 function parseFloat2(s: string): number {
   const n = parseFloat(s.replace(",", "."));
   return isNaN(n) ? 0 : n;
@@ -157,5 +173,112 @@ export function simulateGrades(
         notaNecesara: Math.min(10, Math.max(5, notaUniforma)),
       })),
     message: mesaj,
+  };
+}
+
+export function simulateWithHypotheticals(
+  allGrades: Grade[],
+  hypotheticals: Record<string, number>,
+  targetMedia: number
+): HypotheticalSimResult {
+  const graded = allGrades.filter((g) => g.notaFinala && parseFloat2(g.notaFinala) >= 5);
+  const pending = allGrades
+    .filter((g) => !g.notaFinala || parseFloat2(g.notaFinala) === 0)
+    .slice()
+    .sort((a, b) => parseFloat2(b.credite) - parseFloat2(a.credite));
+
+  let gradedSum = 0;
+  let gradedCredite = 0;
+  for (const g of graded) {
+    gradedSum += parseFloat2(g.notaFinala) * parseFloat2(g.credite);
+    gradedCredite += parseFloat2(g.credite);
+  }
+
+  if (pending.length === 0) {
+    const actual = gradedCredite > 0 ? gradedSum / gradedCredite : 0;
+    return {
+      possible: actual >= targetMedia,
+      targetMedia,
+      uniformMinimum: null,
+      pendingSubjects: [],
+      message:
+        actual >= targetMedia
+          ? `Ai deja media ${actual.toFixed(2)} ≥ ${targetMedia.toFixed(1)}.`
+          : `Nu mai sunt materii în așteptare. Media actuală: ${actual.toFixed(2)}.`,
+      allSet: true,
+    };
+  }
+
+  const withHypo = pending.filter((g) => hypotheticals[g.titlu] !== undefined);
+  const withoutHypo = pending.filter((g) => hypotheticals[g.titlu] === undefined);
+
+  let hypoSum = 0;
+  let hypoCredite = 0;
+  for (const g of withHypo) {
+    hypoSum += hypotheticals[g.titlu] * parseFloat2(g.credite);
+    hypoCredite += parseFloat2(g.credite);
+  }
+
+  const unsetCredite = withoutHypo.reduce((acc, g) => acc + parseFloat2(g.credite), 0);
+  const totalCredite = gradedCredite + hypoCredite + unsetCredite;
+
+  // All pending subjects have hypotheticals — project final average
+  if (withoutHypo.length === 0) {
+    const projected = (gradedSum + hypoSum) / (gradedCredite + hypoCredite);
+    const possible = projected >= targetMedia;
+    return {
+      possible,
+      targetMedia,
+      uniformMinimum: null,
+      pendingSubjects: pending.map((g) => ({
+        titlu: g.titlu,
+        credite: parseFloat2(g.credite),
+        hypothetical: hypotheticals[g.titlu],
+        notaNecesara: null,
+      })),
+      message: possible
+        ? `Cu notele introduse vei obține media ${projected.toFixed(2)} ≥ ${targetMedia.toFixed(1)}.`
+        : `Cu notele introduse vei obține media ${projected.toFixed(2)} — sub ținta de ${targetMedia.toFixed(1)}.`,
+      allSet: true,
+    };
+  }
+
+  const needed = targetMedia * totalCredite - gradedSum - hypoSum;
+
+  if (needed <= 0) {
+    return {
+      possible: true,
+      targetMedia,
+      uniformMinimum: 5,
+      pendingSubjects: pending.map((g) => ({
+        titlu: g.titlu,
+        credite: parseFloat2(g.credite),
+        hypothetical: hypotheticals[g.titlu] ?? null,
+        notaNecesara: hypotheticals[g.titlu] !== undefined ? null : 5,
+      })),
+      message: `Ajunge să promovezi materiile rămase cu nota minimă 5.`,
+      allSet: false,
+    };
+  }
+
+  const uniformMinimum = unsetCredite > 0 ? needed / unsetCredite : 11;
+  const possible = uniformMinimum <= 10;
+
+  return {
+    possible,
+    targetMedia,
+    uniformMinimum: possible ? uniformMinimum : null,
+    pendingSubjects: pending.map((g) => ({
+      titlu: g.titlu,
+      credite: parseFloat2(g.credite),
+      hypothetical: hypotheticals[g.titlu] ?? null,
+      notaNecesara: hypotheticals[g.titlu] !== undefined ? null : (possible ? uniformMinimum : null),
+    })),
+    message: !possible
+      ? `Imposibil — chiar și cu 10 la materiile rămase nu poți atinge media ${targetMedia.toFixed(1)}.`
+      : withHypo.length > 0
+        ? `Cu notele introduse, la materiile neselectate trebuie minim ${uniformMinimum.toFixed(2)}.`
+        : `La toate materiile rămase trebuie minim ${uniformMinimum.toFixed(2)}.`,
+    allSet: false,
   };
 }

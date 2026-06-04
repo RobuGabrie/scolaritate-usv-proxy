@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Timetable, SavedGroup, OrarGroup } from "@/lib/orar/types";
 import { semesterFromDate, isSameAcademicYear } from "@/lib/orar/academicYear";
-import { TimetableGrid } from "./TimetableGrid";
+import { PinchZoomGrid } from "./PinchZoomGrid";
 import { MobileDayView } from "./MobileDayView";
 import { GroupPicker } from "./GroupPicker";
 import { InstructorModal } from "./InstructorModal";
@@ -49,6 +49,7 @@ export function OrarView({ facultyId, studyYear }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [activeDay, setActiveDay] = useState<number>(todayDayIndex());
   const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"day" | "week">("week");
 
   const loadTimetable = useCallback(async (groupId: string, sem: number) => {
     setLoading(true);
@@ -124,26 +125,44 @@ export function OrarView({ facultyId, studyYear }: Props) {
   return (
     <>
       {/* Header */}
-      <div className="px-4 sm:px-6 pt-14 sm:pt-8 pb-4 border-b border-border space-y-4 shrink-0">
+      <div className="px-4 sm:px-6 pt-14 sm:pt-6 pb-4 border-b border-border shrink-0">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
             <h1 className="text-xl font-bold tracking-tight text-foreground shrink-0">Orar</h1>
             {savedGroup && (
-              <span className="text-[13px] text-muted-foreground truncate hidden sm:block">
-                {savedGroup.groupLabel}
-              </span>
+              <button
+                onClick={() => setShowPicker(true)}
+                className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors min-w-0 group"
+              >
+                <span className="truncate">{savedGroup.groupCode}</span>
+                <svg className="shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
             )}
           </div>
-          {savedGroup && (
-            <button
-              onClick={() => setShowPicker(true)}
-              className="shrink-0 h-9 px-4 rounded-3xl border border-border text-[13px] text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all active:scale-[0.97]"
-            >
-              Schimbă grupa
-            </button>
+
+          {timetable && timetable.classes.length > 0 && (
+            <div className="flex h-8 rounded-lg border border-border bg-muted/30 p-0.5 shrink-0">
+              <button
+                onClick={() => setViewMode("day")}
+                className={`px-3 rounded-md text-[12px] font-medium transition-colors ${
+                  viewMode === "day" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Zi
+              </button>
+              <button
+                onClick={() => setViewMode("week")}
+                className={`px-3 rounded-md text-[12px] font-medium transition-colors ${
+                  viewMode === "week" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Săptămână
+              </button>
+            </div>
           )}
         </div>
-
       </div>
 
       {/* Body */}
@@ -196,22 +215,20 @@ export function OrarView({ facultyId, studyYear }: Props) {
           </div>
         ) : (
           <>
-            {/* Desktop grid */}
-            <div className="hidden md:block flex-1 overflow-y-auto">
-              <TimetableGrid timetable={timetable} onInstructorClick={setSelectedInstructor} />
-            </div>
-
-            {/* Mobile day view */}
-            <div className="md:hidden flex-1 flex flex-col overflow-hidden">
-              <MobileDayView
-                classes={dayClasses}
-                allClasses={timetable.classes}
-                activeDay={activeDay}
-                onDayChange={setActiveDay}
-                activeDays={timetable.activeDays}
-                onInstructorClick={setSelectedInstructor}
-              />
-            </div>
+            {viewMode === "week" ? (
+              <PinchZoomGrid timetable={timetable} onInstructorClick={setSelectedInstructor} />
+            ) : (
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <MobileDayView
+                  classes={dayClasses}
+                  allClasses={timetable.classes}
+                  activeDay={activeDay}
+                  onDayChange={setActiveDay}
+                  activeDays={timetable.activeDays}
+                  onInstructorClick={setSelectedInstructor}
+                />
+              </div>
+            )}
           </>
         )}
       </div>
