@@ -30,23 +30,23 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Școlaritate — Portal studențesc USV",
-    template: "%s · Școlaritate USV",
+    default: "Portal USV — Note, orar și profil fără VPN",
+    template: "%s · Portal USV",
   },
   description:
-    "Accesează notele, orarul și profilul tău de student USV fără VPN, de pe orice dispozitiv. Portal neoficial pentru studenții Universității Ștefan cel Mare din Suceava.",
+    "Note, orar și profil pentru studenții USV — fără VPN, de pe orice dispozitiv.",
   keywords: [
+    "portal USV",
     "USV",
     "Universitatea Stefan cel Mare Suceava",
-    "portal studenti USV",
     "note USV",
     "orar USV",
+    "studenti USV",
     "scolaritate USV",
-    "studenti Suceava",
-    "portal academic USV",
-    "note facultate Suceava",
+    "portal studenti Suceava",
+    "note facultate USV",
   ],
-  authors: [{ name: "Școlaritate" }],
+  authors: [{ name: "Portal USV" }],
   robots: {
     index: true,
     follow: true,
@@ -56,16 +56,38 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ro_RO",
     url: APP_URL,
-    siteName: "Școlaritate USV",
-    title: "Școlaritate — Portal studențesc USV",
+    siteName: "Portal USV",
+    title: "Portal USV — Note, orar și profil fără VPN",
     description:
       "Note, orar și profil pentru studenții USV — fără VPN, de pe orice dispozitiv.",
+    images: [{ url: "/opengraph-image", alt: "Portal USV — interfață modernă pentru studenții USV" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Școlaritate — Portal studențesc USV",
+    title: "Portal USV — Note, orar și profil fără VPN",
     description:
       "Note, orar și profil pentru studenții USV — fără VPN, de pe orice dispozitiv.",
+    images: [{ url: "/opengraph-image", alt: "Portal USV — interfață modernă pentru studenții USV" }],
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Portal USV",
+  url: APP_URL,
+  description: "Note, orar și profil pentru studenții USV — fără VPN, de pe orice dispozitiv.",
+  applicationCategory: "EducationApplication",
+  operatingSystem: "Web",
+  inLanguage: "ro",
+  audience: {
+    "@type": "EducationalAudience",
+    educationalRole: "student",
+  },
+  provider: {
+    "@type": "Organization",
+    name: "Universitatea Ștefan cel Mare din Suceava",
+    url: "https://www.usv.ro",
   },
 };
 
@@ -80,6 +102,12 @@ export default function RootLayout({
       className={`${inter.variable} ${geistMono.variable} h-full`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="min-h-full bg-background text-foreground antialiased">
         <ThemeProvider>
           <TooltipProvider delay={300}>{children}</TooltipProvider>

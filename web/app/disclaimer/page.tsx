@@ -148,7 +148,7 @@ export default function DisclaimerPage() {
             </div>
             <div>
               <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Proiect open-source</p>
-              <h1 className="text-[22px] font-bold tracking-[-0.02em] text-foreground leading-none mt-0.5">Școlaritate</h1>
+              <h1 className="text-[22px] font-bold tracking-[-0.02em] text-foreground leading-none mt-0.5">Portal USV</h1>
             </div>
           </div>
 
@@ -170,7 +170,7 @@ export default function DisclaimerPage() {
 
           <Section icon={<IconInfo />} title="Despre proiect" delay={80}>
             <p>
-              <strong className="text-foreground">Școlaritate</strong> este un proiect personal realizat de{" "}
+              <strong className="text-foreground">Portal USV</strong> este un proiect personal realizat de{" "}
               <strong className="text-foreground">Robu Gabriel</strong>, student la Universitatea
               „Ștefan cel Mare" din Suceava (USV). Platforma a apărut din necesitate practică:
               accesul la portalul oficial de note era blocat în toate browserele moderne din cauza
