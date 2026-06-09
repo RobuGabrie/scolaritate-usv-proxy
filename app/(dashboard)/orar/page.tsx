@@ -12,11 +12,14 @@ export default async function OrarPage() {
   let studyYear: number | null = null;
 
   try {
-    const profile = await fetchProfile(session.cookies);
-    if (profile.faculty && FACULTY_IDS[profile.faculty]) {
+    const profile = await Promise.race([
+      fetchProfile(session.cookies),
+      new Promise<null>((_, reject) => setTimeout(() => reject(), 3000)),
+    ]);
+    if (profile && profile.faculty && FACULTY_IDS[profile.faculty]) {
       facultyId = FACULTY_IDS[profile.faculty];
     }
-    if (profile.studyYear) {
+    if (profile && profile.studyYear) {
       const m = profile.studyYear.match(/\d+/);
       if (m) studyYear = parseInt(m[0]);
     }

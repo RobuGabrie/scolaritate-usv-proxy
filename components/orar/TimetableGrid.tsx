@@ -1,4 +1,6 @@
-import { Fragment } from "react";
+"use client";
+
+import { Fragment, useMemo } from "react";
 import type { Timetable, ClassEntry } from "@/lib/orar/types";
 import { ClassBlock } from "./ClassBlock";
 import { cn } from "@/lib/utils";
@@ -33,20 +35,37 @@ export function TimetableGrid({ timetable, onInstructorClick }: Props) {
 
   if (hourSlots.length === 0) return null;
 
-  // Deduplicate: for same day+hour+rowspan, keep unique entries
-  // (same entry can't appear twice, but even/odd week entries share same slot)
-  const getClasses = (day: number, hour: number): ClassEntry[] =>
-    classes.filter((c) => c.day === day && c.startHour === hour);
+  const hourIdxMap = useMemo(
+    () => new Map(hourSlots.map((h, i) => [h, i])),
+    [hourSlots]
+  );
 
-  // Check if this hour row should be hidden because it's covered by a rowspan above
-  // We track which (day, hourIdx) cells are covered
-  const covered = new Set<string>();
-  for (const entry of classes) {
-    const startIdx = hourSlots.indexOf(entry.startHour);
-    for (let i = 1; i < entry.rowspan; i++) {
-      covered.add(`${entry.day}-${startIdx + i}`);
+  const dayIdxMap = useMemo(
+    () => new Map(days.map((d, i) => [d, i])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [days.join(",")]
+  );
+
+  const classesByDayHour = useMemo(() => {
+    const m = new Map<string, ClassEntry[]>();
+    for (const c of classes) {
+      const k = `${c.day}-${c.startHour}`;
+      if (!m.has(k)) m.set(k, []);
+      m.get(k)!.push(c);
     }
-  }
+    return m;
+  }, [classes]);
+
+  const covered = useMemo(() => {
+    const s = new Set<string>();
+    for (const entry of classes) {
+      const startIdx = hourIdxMap.get(entry.startHour) ?? 0;
+      for (let i = 1; i < entry.rowspan; i++) {
+        s.add(`${entry.day}-${startIdx + i}`);
+      }
+    }
+    return s;
+  }, [classes, hourIdxMap]);
 
   return (
     <div className="p-4 sm:p-6 overflow-x-auto">
@@ -94,7 +113,7 @@ export function TimetableGrid({ timetable, onInstructorClick }: Props) {
               const key = `${day}-${hIdx}`;
               if (covered.has(key)) return null;
 
-              const dayClasses = getClasses(day, hour);
+              const dayClasses = classesByDayHour.get(`${day}-${hour}`) ?? [];
 
               // Find the max rowspan for this cell (determines grid span)
               const maxRowspan = dayClasses.length > 0
@@ -106,7 +125,7 @@ export function TimetableGrid({ timetable, onInstructorClick }: Props) {
                   key={`cell-${day}-${hour}`}
                   style={{
                     gridRow: `${hIdx + 2} / span ${maxRowspan}`,
-                    gridColumn: days.indexOf(day) + 2,
+                    gridColumn: (dayIdxMap.get(day) ?? 0) + 2,
                   }}
                   className={cn(
                     "rounded-lg overflow-hidden",

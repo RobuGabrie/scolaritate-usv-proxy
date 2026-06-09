@@ -1,17 +1,29 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { fetchGrades } from "@/lib/usv/grades";
 import { GradesView } from "@/components/grades/GradesView";
+import { GradesSkeleton } from "@/components/grades/GradesSkeleton";
 
 export default async function NotePage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
+  return (
+    <main className="flex-1 flex flex-col overflow-hidden">
+      <Suspense fallback={<GradesSkeleton />}>
+        <GradesContent cookies={session.cookies} />
+      </Suspense>
+    </main>
+  );
+}
+
+async function GradesContent({ cookies }: { cookies: string }) {
   let grades: Awaited<ReturnType<typeof fetchGrades>> | null = null;
   let error: string | null = null;
 
   try {
-    grades = await fetchGrades(session.cookies);
+    grades = await fetchGrades(cookies);
   } catch (err) {
     error = err instanceof Error ? err.message : "Eroare necunoscută";
   }
@@ -31,12 +43,10 @@ export default async function NotePage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col overflow-hidden">
-      <GradesView
-        grades={grades?.grades ?? []}
-        academicYear={grades?.academicYear ?? ""}
-        currentStrm={grades?.psContext?.currentStrm ?? ""}
-      />
-    </main>
+    <GradesView
+      grades={grades?.grades ?? []}
+      academicYear={grades?.academicYear ?? ""}
+      currentStrm={grades?.psContext?.currentStrm ?? ""}
+    />
   );
 }

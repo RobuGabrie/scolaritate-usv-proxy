@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { label: "Profil", href: "/profil" },
 ];
 
-const REVOLUT_LINK = "https://revolut.me/robugabi2004";
+const REVOLUT_LINK = "/api/donate";
 
 function IconHeart() {
   return (

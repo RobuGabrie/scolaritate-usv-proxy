@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { OrarGroup } from "@/lib/orar/types";
 
 interface Props {
@@ -30,18 +30,20 @@ export function GroupPicker({ facultyId, studyYear, defaultSemester, onSelect, o
       .finally(() => setLoading(false));
   }, [facultyId, defaultSemester]);
 
-  const years = [...new Set(groups.map((g) => g.year))].sort((a, b) => a - b);
+  const years = useMemo(
+    () => [...new Set(groups.map((g) => g.year))].sort((a, b) => a - b),
+    [groups]
+  );
 
-  const filtered = groups.filter((g) => {
-    if (yearFilter !== null && g.year !== yearFilter) return false;
-    if (!search) return true;
-    const s = search.toLowerCase();
-    return (
-      g.groupCode.includes(s) ||
-      g.program.toLowerCase().includes(s) ||
-      `${g.program} an ${g.year} ${g.groupCode}`.toLowerCase().includes(s)
-    );
-  });
+  const filtered = useMemo(
+    () => groups.filter((g) => {
+      if (yearFilter !== null && g.year !== yearFilter) return false;
+      if (!search) return true;
+      const s = search.toLowerCase();
+      return g.groupCode.includes(s) || g.program.toLowerCase().includes(s);
+    }),
+    [groups, yearFilter, search]
+  );
 
   return (
     <div className="flex flex-col h-full max-w-lg mx-auto w-full px-4 sm:px-6 py-8">

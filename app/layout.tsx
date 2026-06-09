@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     "portal studenti Suceava",
     "note facultate USV",
   ],
-  authors: [{ name: "Scolaritate+" }],
+  authors: [],
   robots: {
     index: true,
     follow: true,

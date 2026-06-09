@@ -25,8 +25,6 @@ export function MobileDayView({ classes, allClasses, activeDay, onDayChange, act
   const today = todayDayIndex();
   const days = activeDays.includes(6) ? ALL_DAYS : ALL_DAYS.slice(0, 5);
 
-  const sorted = [...classes].sort((a, b) => a.startHour - b.startHour);
-
   return (
     <div className="flex flex-col">
       {/* Day tabs */}
@@ -60,12 +58,12 @@ export function MobileDayView({ classes, allClasses, activeDay, onDayChange, act
 
       {/* Classes for active day */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-        {sorted.length === 0 ? (
+        {classes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-[13px] text-muted-foreground">Nicio oră în această zi.</p>
           </div>
         ) : (
-          sorted.map((entry, i) => (
+          classes.map((entry, i) => (
             <div key={i} className="flex items-start gap-3">
               <div className="w-10 shrink-0 pt-2 text-right">
                 <span className="text-[11px] text-muted-foreground/60 tabular-nums">

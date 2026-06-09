@@ -1,11 +1,12 @@
+import { memo } from "react";
 import type { ClassEntry, ClassType, WeekPattern } from "@/lib/orar/types";
 import { cn } from "@/lib/utils";
 
-const TYPE_TOKENS: Record<ClassType, { bg: string; text: string; border: string; label: string }> = {
-  curs:      { bg: "bg-primary/10",  text: "text-primary",          border: "border-primary/20",  label: "Curs" },
-  laborator: { bg: "bg-chart-2/10",  text: "text-chart-2",          border: "border-chart-2/20",  label: "Laborator" },
-  seminar:   { bg: "bg-chart-3/10",  text: "text-chart-3",          border: "border-chart-3/20",  label: "Seminar" },
-  other:     { bg: "bg-muted/40",    text: "text-muted-foreground", border: "border-border",       label: "Altul" },
+export const TYPE_TOKENS: Record<ClassType, { bg: string; text: string; border: string; label: string; dot: string }> = {
+  curs:      { bg: "bg-primary/10",  text: "text-primary",          border: "border-primary/20",  label: "Curs",      dot: "bg-primary" },
+  laborator: { bg: "bg-chart-2/10",  text: "text-chart-2",          border: "border-chart-2/20",  label: "Laborator", dot: "bg-chart-2" },
+  seminar:   { bg: "bg-chart-3/10",  text: "text-chart-3",          border: "border-chart-3/20",  label: "Seminar",   dot: "bg-chart-3" },
+  other:     { bg: "bg-muted/40",    text: "text-muted-foreground", border: "border-border",       label: "Altul",     dot: "bg-border"  },
 };
 
 function weekLabel(pattern: WeekPattern): string | null {
@@ -21,7 +22,7 @@ interface Props {
   onInstructorClick?: (name: string) => void;
 }
 
-export function ClassBlock({ entry, compact, onInstructorClick }: Props) {
+export const ClassBlock = memo(function ClassBlock({ entry, compact, onInstructorClick }: Props) {
   const t = TYPE_TOKENS[entry.type];
   const name = entry.fullName || entry.shortName;
   const endHour = entry.startHour + entry.rowspan;
@@ -33,10 +34,7 @@ export function ClassBlock({ entry, compact, onInstructorClick }: Props) {
   if (compact) {
     return (
       <div className={cn("h-full rounded-md border flex flex-col gap-0.5 overflow-hidden p-1.5", t.bg, t.border)}>
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-[9px] text-muted-foreground tabular-nums leading-none">{timeLabel}</span>
-          <span className={cn("text-[9px] font-semibold px-1 py-0.5 rounded-sm leading-none shrink-0", t.text)}>{t.label}</span>
-        </div>
+        <span className="text-[9px] text-muted-foreground tabular-nums leading-none">{timeLabel}</span>
         <p className="text-[10px] font-semibold leading-tight line-clamp-2 text-foreground">{name}</p>
         {instructor && (
           onInstructorClick ? (
@@ -57,13 +55,7 @@ export function ClassBlock({ entry, compact, onInstructorClick }: Props) {
 
   return (
     <div className={cn("h-full rounded-lg border flex flex-col gap-1 overflow-hidden p-2", t.bg, t.border)}>
-      {/* Time + type row */}
-      <div className="flex items-center justify-between gap-1">
-        <span className="text-[11px] font-medium text-muted-foreground tabular-nums leading-none">{timeLabel}</span>
-        <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded-sm leading-none shrink-0 border", t.bg, t.text, t.border)}>
-          {t.label}
-        </span>
-      </div>
+      <span className="text-[11px] font-medium text-muted-foreground tabular-nums leading-none">{timeLabel}</span>
 
       {/* Subject name */}
       <p className="text-[13px] font-bold leading-tight line-clamp-2 text-foreground">{name}</p>
@@ -97,4 +89,4 @@ export function ClassBlock({ entry, compact, onInstructorClick }: Props) {
       </div>
     </div>
   );
-}
+});

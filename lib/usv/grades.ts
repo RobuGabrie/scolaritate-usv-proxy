@@ -88,19 +88,26 @@ export async function discoverYears(cookies: string): Promise<YearOption[]> {
   if (isNaN(current)) return [];
 
   const years: YearOption[] = [{ strm: ctx.currentStrm, label: strmToLabel(ctx.currentStrm) }];
+  const candidates = Array.from({ length: 7 }, (_, i) => current - 1 - i);
 
-  let consecutiveEmpty = 0;
-  for (let s = current - 1; s >= current - 7; s--) {
-    try {
-      const url = buildGradeUrl(ctx, String(s));
-      const res = await curlGet(url, cookies);
-      if (!res.ok) { consecutiveEmpty++; if (consecutiveEmpty >= 2) break; continue; }
+  // Fire in batches of 3 to avoid overwhelming a single PeopleSoft session
+  for (let i = 0; i < candidates.length; i += 3) {
+    const chunk = candidates.slice(i, i + 3);
+    const results = await Promise.allSettled(
+      chunk.map(async (s) => {
+        const res = await curlGet(buildGradeUrl(ctx, String(s)), cookies);
+        return { s, res };
+      })
+    );
 
+    let consecutiveEmpty = 0;
+    for (const r of results) {
+      if (r.status === "rejected") { consecutiveEmpty++; continue; }
+      const { s, res } = r.value;
+      if (!res.ok) { consecutiveEmpty++; if (consecutiveEmpty >= 2) return years; continue; }
       const result = extractResult(res.body);
       const returnedStrm = result.psContext?.currentStrm;
-
       if (returnedStrm && returnedStrm !== String(s)) {
-        // PeopleSoft redirected — no data for this year
         consecutiveEmpty++;
       } else if (result.grades.length > 0) {
         consecutiveEmpty = 0;
@@ -108,11 +115,7 @@ export async function discoverYears(cookies: string): Promise<YearOption[]> {
       } else {
         consecutiveEmpty++;
       }
-
-      if (consecutiveEmpty >= 2) break;
-    } catch {
-      consecutiveEmpty++;
-      if (consecutiveEmpty >= 2) break;
+      if (consecutiveEmpty >= 2) return years;
     }
   }
 

@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import type { Timetable, SavedGroup, OrarGroup } from "@/lib/orar/types";
 import { semesterFromDate, isSameAcademicYear } from "@/lib/orar/academicYear";
 import { PinchZoomGrid } from "./PinchZoomGrid";
 import { MobileDayView } from "./MobileDayView";
 import { GroupPicker } from "./GroupPicker";
 import { InstructorModal } from "./InstructorModal";
+import { TYPE_TOKENS } from "./ClassBlock";
+
+const LEGEND = (
+  ["curs", "laborator", "seminar"] as const
+).map((type) => ({ type, ...TYPE_TOKENS[type] }));
 
 interface Props {
   facultyId: number;
@@ -120,29 +125,33 @@ export function OrarView({ facultyId, studyYear }: Props) {
     await loadTimetable(group.id, semester);
   }
 
-  const dayClasses = timetable?.classes.filter((c) => c.day === activeDay) ?? [];
+  const dayClasses = useMemo(
+    () => (timetable?.classes.filter((c) => c.day === activeDay) ?? [])
+      .sort((a, b) => a.startHour - b.startHour),
+    [timetable, activeDay]
+  );
 
   return (
     <>
       {/* Header */}
       <div className="px-4 sm:px-6 pt-14 sm:pt-6 pb-4 border-b border-border shrink-0">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <h1 className="text-xl font-bold tracking-tight text-foreground shrink-0">Orar</h1>
-            {savedGroup && (
-              <button
-                onClick={() => setShowPicker(true)}
-                className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors min-w-0 group"
-              >
-                <span className="truncate">{savedGroup.groupCode}</span>
-                <svg className="shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </button>
-            )}
-          </div>
+        <div className={`flex items-center gap-2 ${timetable && timetable.classes.length > 0 ? "mb-4" : ""}`}>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Orar</h1>
+          {savedGroup && (
+            <button
+              onClick={() => setShowPicker(true)}
+              className="flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors min-w-0 group"
+            >
+              <span className="truncate">{savedGroup.groupCode}</span>
+              <svg className="shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+          )}
+        </div>
 
-          {timetable && timetable.classes.length > 0 && (
+        {timetable && timetable.classes.length > 0 && (
+          <div className="flex items-center gap-4">
             <div className="flex h-8 rounded-lg border border-border bg-muted/30 p-0.5 shrink-0">
               <button
                 onClick={() => setViewMode("day")}
@@ -161,8 +170,17 @@ export function OrarView({ facultyId, studyYear }: Props) {
                 Săptămână
               </button>
             </div>
-          )}
-        </div>
+
+            <div className="flex items-center gap-3">
+                {LEGEND.map(({ type, dot, label }) => (
+                  <div key={type} className="flex items-center gap-1.5">
+                    <div className={`w-2.5 h-2.5 rounded-sm shrink-0 ${dot}`} />
+                    <span className="text-[11px] text-muted-foreground">{label}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Body */}
