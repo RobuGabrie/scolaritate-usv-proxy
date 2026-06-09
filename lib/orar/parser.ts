@@ -2,6 +2,7 @@ import { parse } from "node-html-parser";
 import type { OrarGroup, ClassEntry, ClassType, Timetable, WeekPattern } from "./types";
 
 const ORAR_BASE = "https://orar.usv.ro/orar/vizualizare";
+const ORAR_DATA = "https://orar.usv.ro/orar/vizualizare/data";
 
 export function parseGroups(html: string, facultyId: number): OrarGroup[] {
   const root = parse(html);
@@ -217,74 +218,134 @@ function nameMatches(query: string, candidate: string): boolean {
   return matchCount >= Math.min(q.length, 2);
 }
 
-// Same physical class recorded across multiple groups → keep one.
-// Keys on shortName (raw cell text, consistent across all group pages) rather than fullName
-// which comes from tooltip parsing and can differ due to absent tooltips or diacritic encoding
-// inconsistencies across pages, causing dedup to silently fail.
-// Room is excluded: same class can appear with slightly different room strings across groups.
-function deduplicateClasses(classes: ClassEntry[]): ClassEntry[] {
-  const seen = new Map<string, ClassEntry>();
-  for (const cls of classes) {
-    const weekKind = cls.weekPattern.kind;
-    const key = `${cls.day}-${cls.startHour}-${cls.rowspan}-${cls.type}-${cls.shortName}-${weekKind}`;
-    if (!seen.has(key)) {
-      seen.set(key, cls);
+interface ProfessorInfo {
+  id: string;
+  lastName: string;
+  firstName: string;
+}
+
+export async function fetchProfessors(): Promise<ProfessorInfo[]> {
+  const res = await fetch(`${ORAR_DATA}/cadre.php?json`, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+    next: { revalidate: 3600 },
+  });
+  if (!res.ok) throw new Error(`cadre.php status ${res.status}`);
+  const data = await res.json() as Array<{ id: string; lastName: string | null; firstName: string | null }>;
+  return data
+    .filter((p) => p.id && p.lastName)
+    .map((p) => ({
+      id: p.id,
+      lastName: (p.lastName ?? "").trim(),
+      firstName: (p.firstName ?? "").trim(),
+    }));
+}
+
+function parseProfessorHtml(html: string): ClassEntry[] {
+  // Response starts with a stray "[" — strip it
+  const root = parse(html.replace(/^\[/, ""));
+  const rows = root.querySelectorAll("tr");
+  const classes: ClassEntry[] = [];
+  const seen = new Set<string>();
+
+  for (let i = 1; i < rows.length; i++) {
+    const tds = rows[i].querySelectorAll("td");
+    if (tds.length < 21) continue;
+
+    const get = (idx: number) => tds[idx].text.trim();
+
+    const topicLong = decodeHtmlEntities(get(12));
+    const topicShort = decodeHtmlEntities(get(13));
+    const roomLong = get(10);
+    const roomShort = get(11);
+    const weekDay = parseInt(get(14));
+    const startMin = parseInt(get(15));
+    const duration = parseInt(get(16));
+    const parity = get(17);
+    const otherInfo = get(18);
+    const typeLong = get(20);
+
+    if (isNaN(weekDay) || isNaN(startMin) || !topicShort) continue;
+
+    const startHour = startMin / 60;
+    const rowspan = Math.max(1, Math.round(duration / 120));
+
+    let weekPattern: WeekPattern;
+    if (parity === "i") weekPattern = { kind: "odd" };
+    else if (parity === "p") weekPattern = { kind: "even" };
+    else if (otherInfo) {
+      const nums = [...otherInfo.matchAll(/\d+/g)].map((n) => parseInt(n[0]));
+      weekPattern = nums.length > 0 ? { kind: "specific", weeks: nums } : { kind: "all" };
     } else {
-      // Prefer the entry that has tooltip data (fullName/fullRoom/fullInstructor populated)
-      const existing = seen.get(key)!;
-      if (!existing.fullName && cls.fullName) {
-        seen.set(key, cls);
-      }
+      weekPattern = { kind: "all" };
     }
+
+    const type: ClassType =
+      typeLong === "curs" ? "curs" :
+      typeLong === "laborator" ? "laborator" :
+      typeLong === "seminar" ? "seminar" :
+      "other";
+
+    // Deduplicate: same slot + parity + type + subject = same class for different groups
+    const key = `${weekDay}-${startMin}-${parity}-${typeLong}-${topicShort}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    classes.push({
+      day: weekDay,
+      startHour,
+      rowspan,
+      type,
+      shortName: topicShort,
+      room: roomShort,
+      instructor: "",
+      fullName: topicLong,
+      fullRoom: roomLong,
+      fullInstructor: "",
+      weekPattern,
+    });
   }
-  return [...seen.values()];
+
+  return classes;
+}
+
+export async function fetchInstructorScheduleById(professorId: number): Promise<Timetable> {
+  const url = `${ORAR_DATA}/orarSPG.php?mod=prof&ID=${professorId}`;
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0", "Accept-Language": "ro-RO,ro;q=0.9" },
+    next: { revalidate: 1800 },
+  });
+  if (!res.ok) throw new Error(`orarSPG.php status ${res.status}`);
+  const html = await res.text();
+
+  const classes = parseProfessorHtml(html);
+  const hourSlots = [...new Set(classes.map((c) => c.startHour))].sort((a, b) => a - b);
+  const activeDays = [...new Set(classes.map((c) => c.day))].sort((a, b) => a - b);
+
+  return {
+    groupId: `instructor:${professorId}`,
+    semester: 0,
+    classes,
+    hourSlots,
+    activeDays,
+  };
 }
 
 export async function fetchInstructorSchedule(
   instructorName: string,
-  facultyId: number,
-  sem: number,
+  _facultyId: number,
+  _sem: number,
 ): Promise<Timetable> {
-  const groups = await fetchGroups(facultyId, sem);
-  if (groups.length === 0) throw new Error("Nu s-au putut încărca grupele.");
+  const professors = await fetchProfessors();
 
-  const BATCH = 10;
-  const matchedClasses: ClassEntry[] = [];
+  const match = professors.find((p) => {
+    const fullName = `${p.lastName} ${p.firstName}`;
+    const fullNameRev = `${p.firstName} ${p.lastName}`;
+    return nameMatches(instructorName, fullName) || nameMatches(instructorName, fullNameRev);
+  });
 
-  for (let i = 0; i < groups.length; i += BATCH) {
-    const batch = groups.slice(i, i + BATCH);
-    const results = await Promise.allSettled(
-      batch.map((g) => fetchTimetable(g.id, sem)),
-    );
-    for (let j = 0; j < results.length; j++) {
-      const r = results[j];
-      if (r.status !== "fulfilled") continue;
-      const group = batch[j];
-      for (const cls of r.value.classes) {
-        const name = cls.fullInstructor || cls.instructor;
-        if (nameMatches(instructorName, name)) {
-          matchedClasses.push({ ...cls, groupCode: group.groupCode });
-        }
-      }
-    }
-  }
+  if (!match) throw new Error(`Profesorul nu a fost găsit în lista de cadre.`);
 
-  const deduplicated = deduplicateClasses(matchedClasses);
-
-  const hourSlots = [...new Set(deduplicated.map((c) => c.startHour))].sort(
-    (a, b) => a - b,
-  );
-  const activeDays = [...new Set(deduplicated.map((c) => c.day))].sort(
-    (a, b) => a - b,
-  );
-
-  return {
-    groupId: `instructor:${instructorName}`,
-    semester: sem,
-    classes: deduplicated,
-    hourSlots,
-    activeDays,
-  };
+  return fetchInstructorScheduleById(parseInt(match.id));
 }
 
 export async function fetchGroups(facultyId: number, sem: number): Promise<OrarGroup[]> {

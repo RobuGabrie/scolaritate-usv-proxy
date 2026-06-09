@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchInstructorSchedule } from "@/lib/orar/parser";
+import { fetchInstructorSchedule, fetchInstructorScheduleById } from "@/lib/orar/parser";
 import { checkRateLimit, getClientIp, LIMITS } from "@/lib/ratelimit";
 
 export async function GET(req: NextRequest) {
@@ -9,14 +9,20 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
   const name = searchParams.get("name");
-  const facultyId = parseInt(searchParams.get("facultyId") ?? "");
+  const facultyId = parseInt(searchParams.get("facultyId") ?? "0");
   const sem = parseInt(searchParams.get("sem") ?? "2");
 
-  if (!name) return NextResponse.json({ error: "name lipsă" }, { status: 400 });
-  if (isNaN(facultyId)) return NextResponse.json({ error: "facultyId lipsă" }, { status: 400 });
-
   try {
+    if (id) {
+      const professorId = parseInt(id);
+      if (isNaN(professorId)) return NextResponse.json({ error: "id invalid" }, { status: 400 });
+      const timetable = await fetchInstructorScheduleById(professorId);
+      return NextResponse.json(timetable);
+    }
+
+    if (!name) return NextResponse.json({ error: "name sau id lipsă" }, { status: 400 });
     const timetable = await fetchInstructorSchedule(name, facultyId, sem);
     return NextResponse.json(timetable);
   } catch (err) {
