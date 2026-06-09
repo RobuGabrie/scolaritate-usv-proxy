@@ -44,6 +44,9 @@ export function GradesView({ grades: initialGrades, academicYear: initialYear, c
   const [yearSwitchLoading, setYearSwitchLoading] = useState(false);
   const [yearError, setYearError] = useState<string | null>(null);
 
+  const [allYearsCredite, setAllYearsCredite] = useState<number | null>(null);
+  const [allYearsLoading, setAllYearsLoading] = useState(false);
+
   // Discover all available years in the background after mount
   useEffect(() => {
     if (!currentStrm) return;
@@ -82,6 +85,31 @@ export function GradesView({ grades: initialGrades, academicYear: initialYear, c
   async function handleYearChange(strm: string) {
     if (strm === selectedStrm) return;
     await loadGrades(strm);
+  }
+
+  async function loadAllYearsCredite() {
+    if (allYearsLoading || allYearsCredite !== null) return;
+    setAllYearsLoading(true);
+    try {
+      const results = await Promise.allSettled(
+        years.map((y) =>
+          fetch(`/api/usv/note?strm=${encodeURIComponent(y.strm)}`).then((r) => r.json())
+        )
+      );
+      let total = 0;
+      for (const r of results) {
+        if (r.status !== "fulfilled" || r.value.error) continue;
+        const gs: Grade[] = r.value.grades ?? [];
+        for (const g of gs) {
+          const n = parseN(g.notaFinala);
+          const c = parseN(g.credite);
+          if (n !== null && n >= 5 && c !== null) total += c;
+        }
+      }
+      setAllYearsCredite(total);
+    } finally {
+      setAllYearsLoading(false);
+    }
   }
 
   const filteredGrades = grades.filter((g) => {
@@ -181,6 +209,26 @@ export function GradesView({ grades: initialGrades, academicYear: initialYear, c
                   {stats.creditePromovate}
                   <span className="text-muted-foreground font-normal text-sm"> / {crediteAsteptate}</span>
                 </p>
+              </div>
+            )}
+
+            {years.length > 1 && (
+              <div>
+                <p className="text-[11px] text-muted-foreground mb-0.5">Total acumulat</p>
+                {allYearsCredite !== null ? (
+                  <p className="text-xl font-bold tabular-nums leading-none text-foreground">
+                    {allYearsCredite}
+                    <span className="text-muted-foreground font-normal text-sm"> cr</span>
+                  </p>
+                ) : (
+                  <button
+                    onClick={loadAllYearsCredite}
+                    disabled={allYearsLoading}
+                    className="text-[13px] text-primary hover:opacity-70 disabled:opacity-40 transition-opacity tabular-nums leading-none"
+                  >
+                    {allYearsLoading ? "…" : "Calculează"}
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -339,8 +387,7 @@ export function GradesView({ grades: initialGrades, academicYear: initialYear, c
 
         ) : grades.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6 py-16">
-            <p className="text-[13px] text-muted-foreground">Nu s-au putut încărca notele sau nu există note înregistrate.</p>
-            <p className="text-[13px] text-muted-foreground/50 mt-1.5">Verifică că ești conectat la rețeaua USV (VPN sau campus).</p>
+            <p className="text-[13px] text-muted-foreground">Nu există note înregistrate pentru acest an.</p>
           </div>
 
         ) : filteredGrades.length === 0 ? (

@@ -24,11 +24,12 @@ function todayDayIndex(): number {
 export function MobileDayView({ classes, allClasses, activeDay, onDayChange, activeDays, onInstructorClick }: Props) {
   const today = todayDayIndex();
   const days = activeDays.includes(6) ? ALL_DAYS : ALL_DAYS.slice(0, 5);
+  const showTodayBtn = activeDays.includes(today) && activeDay !== today;
 
   return (
     <div className="flex flex-col">
       {/* Day tabs */}
-      <div className="flex gap-0.5 px-4 py-3 border-b border-border overflow-x-auto">
+      <div className="flex items-center gap-0.5 px-4 py-3 border-b border-border overflow-x-auto">
         {days.map((day) => {
           const hasClasses = activeDays.includes(day);
           const isActive = activeDay === day;
@@ -54,6 +55,14 @@ export function MobileDayView({ classes, allClasses, activeDay, onDayChange, act
             </button>
           );
         })}
+        {showTodayBtn && (
+          <button
+            onClick={() => onDayChange(today)}
+            className="ml-auto shrink-0 text-[11px] font-medium text-primary hover:opacity-70 transition-opacity px-2"
+          >
+            Azi
+          </button>
+        )}
       </div>
 
       {/* Classes for active day */}

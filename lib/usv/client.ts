@@ -15,6 +15,12 @@ export interface CurlResult {
   ok: boolean;
 }
 
+// Returns true when USV has silently redirected us to its login page,
+// meaning the PeopleSoft session cookie has expired server-side.
+export function isUsvLoginPage(html: string): boolean {
+  return html.includes('name="userid"') || html.includes("name='userid'") || html.includes("cmd=login");
+}
+
 const BASE_ARGS_FOLLOW = ["-sk", "--tlsv1.0", "-L", "--connect-timeout", "5", "--max-time", "15"];  // follow redirects
 const BASE_ARGS_NOFOLLOW = ["-sk", "--tlsv1.0", "--connect-timeout", "5", "--max-time", "15"];       // stop at first redirect
 

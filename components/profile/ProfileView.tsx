@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ProfileData } from "@/lib/usv/profile";
 
@@ -40,6 +41,7 @@ export function ProfileView({ displayName, userId, expiresAt }: Props) {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [orarGroup, setOrarGroup] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/usv/profile")
@@ -50,6 +52,14 @@ export function ProfileView({ displayName, userId, expiresAt }: Props) {
       })
       .catch(() => setError("Eroare conexiune"))
       .finally(() => setLoading(false));
+
+    try {
+      const raw = localStorage.getItem("orar_group");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { groupLabel?: string; groupCode?: string };
+        setOrarGroup(parsed.groupLabel ?? parsed.groupCode ?? null);
+      }
+    } catch {}
   }, []);
 
   const expiryStr = new Date(expiresAt).toLocaleString("ro-RO", {
@@ -86,6 +96,24 @@ export function ProfileView({ displayName, userId, expiresAt }: Props) {
               Nu s-au putut încărca datele — verifică conexiunea la rețeaua USV.
             </p>
           )}
+        </div>
+
+        {/* Orar shortcut */}
+        <div>
+          <p className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-widest px-1 mb-1.5">
+            Orar
+          </p>
+          <Link
+            href="/orar"
+            className="flex items-center justify-between px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors group"
+          >
+            <span className="text-[13px] text-foreground">
+              {orarGroup ?? "Configurează orarul"}
+            </span>
+            <svg className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </Link>
         </div>
 
         {/* Session */}

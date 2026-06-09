@@ -17,6 +17,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(data);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Eroare server";
+    if (message === "SESSION_EXPIRED") {
+      return NextResponse.json({ error: "SESSION_EXPIRED" }, { status: 401 });
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

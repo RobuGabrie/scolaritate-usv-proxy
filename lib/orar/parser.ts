@@ -51,7 +51,7 @@ function decodeHtmlEntities(s: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ")
-    .replace(/&#\d+;/g, "")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
     .trim();
 }
 
@@ -82,11 +82,11 @@ function parseTooltip(raw: string): {
       fullRoom = item.slice("sala:".length).trim();
     } else if (lower.startsWith("cadru didactic:")) {
       fullInstructor = item.slice("cadru didactic:".length).trim();
-    } else if (lower.includes("saptamanile pare")) {
+    } else if (lower.includes("săptămânile pare") || lower.includes("saptamanile pare")) {
       weekPattern = { kind: "even" };
-    } else if (lower.includes("saptamanile impare")) {
+    } else if (lower.includes("săptămânile impare") || lower.includes("saptamanile impare")) {
       weekPattern = { kind: "odd" };
-    } else if (lower.startsWith("sapt.")) {
+    } else if (lower.startsWith("săpt.") || lower.startsWith("sapt.")) {
       const nums = [...item.matchAll(/\d+/g)].map((n) => parseInt(n[0]));
       if (nums.length > 0) weekPattern = { kind: "specific", weeks: nums };
     }
@@ -155,7 +155,7 @@ export function parseTimetable(html: string, groupId: string, semester: number):
             .replace(/<[^>]+>/g, "")
             .replace(/&nbsp;/g, " ")
             .replace(/&amp;/g, "&")
-            .replace(/&#\d+;/g, "")
+            .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
             .trim()
         )
         .filter((l) => l && !/^[-.\s]+$/.test(l));
@@ -214,20 +214,27 @@ function nameMatches(query: string, candidate: string): boolean {
   // Short candidate (e.g. abbreviated "Turcu C.") — just require the first word (surname)
   if (c.length === 1) return c.includes(q[0]);
   const matchCount = q.filter((w) => c.includes(w)).length;
-  return matchCount >= 2;
+  return matchCount >= Math.min(q.length, 2);
 }
 
 // Same physical class recorded across multiple groups → keep one.
-// Room is intentionally excluded from the key: the same class can appear with slightly
-// different room strings across groups (e.g. "C002" vs "C002 corp A"), causing duplicates to slip through.
+// Keys on shortName (raw cell text, consistent across all group pages) rather than fullName
+// which comes from tooltip parsing and can differ due to absent tooltips or diacritic encoding
+// inconsistencies across pages, causing dedup to silently fail.
+// Room is excluded: same class can appear with slightly different room strings across groups.
 function deduplicateClasses(classes: ClassEntry[]): ClassEntry[] {
   const seen = new Map<string, ClassEntry>();
   for (const cls of classes) {
-    const subject = cls.fullName || cls.shortName;
     const weekKind = cls.weekPattern.kind;
-    const key = `${cls.day}-${cls.startHour}-${cls.rowspan}-${cls.type}-${subject}-${weekKind}`;
+    const key = `${cls.day}-${cls.startHour}-${cls.rowspan}-${cls.type}-${cls.shortName}-${weekKind}`;
     if (!seen.has(key)) {
       seen.set(key, cls);
+    } else {
+      // Prefer the entry that has tooltip data (fullName/fullRoom/fullInstructor populated)
+      const existing = seen.get(key)!;
+      if (!existing.fullName && cls.fullName) {
+        seen.set(key, cls);
+      }
     }
   }
   return [...seen.values()];

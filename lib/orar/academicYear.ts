@@ -1,6 +1,10 @@
-export function currentAcademicYearParam(): string {
+export function currentAcademicStartYear(): number {
   const now = new Date();
-  const year = now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1;
+  return now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1;
+}
+
+export function currentAcademicYearParam(): string {
+  const year = currentAcademicStartYear();
   const s = (y: number) => String(y).slice(-2);
   return `${s(year)}_${s(year + 1)}`;
 }

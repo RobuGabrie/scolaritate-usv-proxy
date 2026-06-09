@@ -1,4 +1,4 @@
-import { curlGet } from "./client";
+import { curlGet, isUsvLoginPage } from "./client";
 import { parsePsContext } from "./gradeParser";
 
 const GRADES_URL =
@@ -50,6 +50,7 @@ function parseClassLinks(html: string): { faculty: string | null; group: string 
 export async function fetchProfile(cookies: string): Promise<ProfileData> {
   const res = await curlGet(GRADES_URL, cookies);
   if (!res.ok) throw new Error(`USV a răspuns cu status ${res.status}`);
+  if (isUsvLoginPage(res.body)) throw new Error("SESSION_EXPIRED");
 
   const html = res.body;
   const ctx = parsePsContext(html);

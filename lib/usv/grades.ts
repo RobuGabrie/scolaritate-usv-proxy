@@ -1,4 +1,4 @@
-import { curlGet } from "./client";
+import { curlGet, isUsvLoginPage } from "./client";
 import { parseGrades, parsePsContext } from "./gradeParser";
 import type { PsContext } from "./gradeParser";
 import type { Grade } from "./types";
@@ -48,6 +48,7 @@ function extractResult(html: string): GradesFetchResult {
 export async function fetchGrades(cookies: string): Promise<GradesFetchResult> {
   const res = await curlGet(GRADES_URL, cookies);
   if (!res.ok) throw new Error(`USV a răspuns cu status ${res.status}`);
+  if (isUsvLoginPage(res.body)) throw new Error("SESSION_EXPIRED");
   return extractResult(res.body);
 }
 
@@ -58,6 +59,7 @@ export async function fetchGradesForStrm(
   // Get current page first to extract psContext (EMPLID, ACAD_CAREER, etc.)
   const ctxRes = await curlGet(GRADES_URL, cookies);
   if (!ctxRes.ok) throw new Error(`USV a răspuns cu status ${ctxRes.status}`);
+  if (isUsvLoginPage(ctxRes.body)) throw new Error("SESSION_EXPIRED");
 
   const ctx = parsePsContext(ctxRes.body);
   if (!ctx) throw new Error("Nu s-a putut determina contextul PeopleSoft");

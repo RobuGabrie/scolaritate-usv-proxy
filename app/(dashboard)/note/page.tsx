@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { fetchGrades } from "@/lib/usv/grades";
 import { GradesView } from "@/components/grades/GradesView";
 import { GradesSkeleton } from "@/components/grades/GradesSkeleton";
+import { SessionExpiredCard } from "@/components/SessionExpiredCard";
 
 export default async function NotePage() {
   const session = await getSession();
@@ -21,11 +22,21 @@ export default async function NotePage() {
 async function GradesContent({ cookies }: { cookies: string }) {
   let grades: Awaited<ReturnType<typeof fetchGrades>> | null = null;
   let error: string | null = null;
+  let sessionExpired = false;
 
   try {
     grades = await fetchGrades(cookies);
   } catch (err) {
-    error = err instanceof Error ? err.message : "Eroare necunoscută";
+    const msg = err instanceof Error ? err.message : "Eroare necunoscută";
+    if (msg === "SESSION_EXPIRED") {
+      sessionExpired = true;
+    } else {
+      error = msg;
+    }
+  }
+
+  if (sessionExpired) {
+    return <SessionExpiredCard />;
   }
 
   if (error) {
@@ -34,9 +45,6 @@ async function GradesContent({ cookies }: { cookies: string }) {
         <div className="max-w-sm text-center">
           <p className="text-sm font-medium text-foreground mb-1">Eroare la încărcarea notelor</p>
           <p className="text-xs text-muted-foreground">{error}</p>
-          <p className="text-xs text-muted-foreground mt-2">
-            Asigură-te că ești conectat la rețeaua USV (VPN sau campus).
-          </p>
         </div>
       </main>
     );
