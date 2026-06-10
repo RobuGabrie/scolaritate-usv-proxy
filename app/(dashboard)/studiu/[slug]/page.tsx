@@ -25,7 +25,7 @@ export default async function SubjectPage({ params }: PageProps) {
   const subject = await getSubject(slug);
   if (!subject) notFound();
 
-  const { meta, body, files } = subject;
+  const { meta, body, sheets, files } = subject;
 
   return (
     <main className="flex-1 flex flex-col overflow-y-auto">
@@ -53,6 +53,35 @@ export default async function SubjectPage({ params }: PageProps) {
       </div>
 
       <div className="px-4 sm:px-6 py-6 max-w-2xl w-full">
+        {sheets.length > 0 && (
+          <section className="mb-7">
+            <h2 className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground mb-2.5">
+              Fișe
+            </h2>
+            <div className="space-y-1.5">
+              {sheets.map((sheet) => (
+                <Link
+                  key={sheet.slug}
+                  href={`/studiu/${meta.slug}/${sheet.slug}`}
+                  className="flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl border border-border hover:bg-muted/40 transition-colors group"
+                >
+                  <span className="text-[13.5px] font-medium text-foreground">{sheet.title}</span>
+                  <span className="flex items-center gap-2.5 shrink-0">
+                    {sheet.updated && (
+                      <span className="text-[11.5px] text-muted-foreground/70 hidden sm:inline">
+                        Actualizat la {sheet.updated}
+                      </span>
+                    )}
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground group-hover:text-foreground transition-colors" aria-hidden>
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         <MarkdownContent>{body}</MarkdownContent>
 
         {files.length > 0 && (

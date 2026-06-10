@@ -20,9 +20,16 @@ export interface StudySubject {
   updated?: string;
 }
 
+export interface StudySheet {
+  slug: string;
+  title: string;
+  updated?: string;
+}
+
 export interface StudySubjectDetail {
   meta: StudySubject;
   body: string;
+  sheets: StudySheet[];
   files: string[];
 }
 
@@ -105,6 +112,34 @@ export async function getSubject(slug: string): Promise<StudySubjectDetail | nul
   }
   const { meta, body } = parseMeta(slug, raw);
 
+  // Extra .md files next to index.md are "sheets" — separate sub-pages
+  const sheets: StudySheet[] = [];
+  const subjectDir = resolveInsideContentDir(slug);
+  if (subjectDir) {
+    try {
+      const entries = await fs.readdir(subjectDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isFile() || !entry.name.endsWith(".md") || entry.name === "index.md") continue;
+        const sheetSlug = entry.name.slice(0, -3);
+        if (!isValidSlug(sheetSlug)) continue;
+        try {
+          const sheetRaw = await fs.readFile(path.join(subjectDir, entry.name), "utf8");
+          const parsed = parseMeta(sheetSlug, sheetRaw);
+          sheets.push({
+            slug: sheetSlug,
+            title: parsed.meta.title,
+            updated: parsed.meta.updated,
+          });
+        } catch {
+          continue;
+        }
+      }
+      sheets.sort((a, b) => a.title.localeCompare(b.title, "ro"));
+    } catch {
+      // unreadable dir — no sheets
+    }
+  }
+
   let files: string[] = [];
   const filesDir = resolveInsideContentDir(slug, "files");
   if (filesDir) {
@@ -119,7 +154,22 @@ export async function getSubject(slug: string): Promise<StudySubjectDetail | nul
     }
   }
 
-  return { meta, body, files };
+  return { meta, body, sheets, files };
+}
+
+export async function getSheet(
+  slug: string,
+  sheetSlug: string
+): Promise<{ meta: StudySubject; body: string } | null> {
+  if (!isValidSlug(slug) || !isValidSlug(sheetSlug) || sheetSlug === "index") return null;
+  const sheetPath = resolveInsideContentDir(slug, `${sheetSlug}.md`);
+  if (!sheetPath) return null;
+  try {
+    const raw = await fs.readFile(sheetPath, "utf8");
+    return parseMeta(sheetSlug, raw);
+  } catch {
+    return null;
+  }
 }
 
 export async function getAttachmentPath(slug: string, filename: string): Promise<string | null> {
