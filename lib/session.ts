@@ -1,22 +1,20 @@
-import { SignJWT, jwtVerify } from "jose";
+import { EncryptJWT, jwtDecrypt } from "jose";
 import { cookies } from "next/headers";
+import { COOKIE_NAME, getEncryptionKey } from "./sessionKey";
 import type { SessionData } from "./usv/types";
 
-const COOKIE_NAME = "usv_session";
 const SESSION_DURATION = 60 * 60 * 8; // 8 ore
 
-function getSecret(): Uint8Array {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) throw new Error("AUTH_SECRET env var missing");
-  return new TextEncoder().encode(secret);
-}
-
+// The session carries the user's live USV (PeopleSoft) cookies, so the token
+// must be ENCRYPTED, not merely signed — a signed JWT exposes its payload as
+// plaintext base64. We use JWE (dir + A256GCM); see lib/sessionKey.ts for key
+// derivation.
 export async function createSession(data: SessionData): Promise<string> {
-  const token = await new SignJWT({ ...data })
-    .setProtectedHeader({ alg: "HS256" })
+  const token = await new EncryptJWT({ ...data })
+    .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
     .setExpirationTime(`${SESSION_DURATION}s`)
     .setIssuedAt()
-    .sign(getSecret());
+    .encrypt(await getEncryptionKey());
   return token;
 }
 
@@ -26,7 +24,7 @@ export async function getSession(): Promise<SessionData | null> {
   if (!token) return null;
 
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtDecrypt(token, await getEncryptionKey());
     return payload as unknown as SessionData;
   } catch {
     return null;

@@ -48,9 +48,19 @@ export function checkRateLimit(key: string, config: RateLimitConfig): boolean {
 }
 
 export function getClientIp(req: Request): string {
-  const forwarded = (req.headers as Headers).get("x-forwarded-for");
+  const headers = req.headers as Headers;
+  // Prefer CF-Connecting-IP: Cloudflare overwrites it with the true client IP
+  // and strips any client-supplied value, so it can't be spoofed. The app sits
+  // behind cloudflared, so this is the trustworthy source in production.
+  const cfIp = headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+  // Fallbacks for local/dev where there's no Cloudflare in front. These ARE
+  // client-spoofable, so they must never be trusted ahead of CF-Connecting-IP.
+  const realIp = headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  const forwarded = headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
-  return (req.headers as Headers).get("x-real-ip") ?? "unknown";
+  return "unknown";
 }
 
 export const LIMITS = {

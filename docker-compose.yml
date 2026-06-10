@@ -54,6 +54,8 @@ services:
       - /dev/net/tun
     ports:
       - "3000:3000"
+    networks:
+      - monitoring
     environment:
       VPN_USERNAME: ${VPN_USERNAME}
       VPN_PASSWORD: ${VPN_PASSWORD}

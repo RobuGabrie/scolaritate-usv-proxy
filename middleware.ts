@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
-import { COOKIE_NAME } from "@/lib/session";
+import { jwtDecrypt } from "jose";
+import { COOKIE_NAME, getEncryptionKey } from "@/lib/sessionKey";
 
 const PUBLIC_PATHS = ["/login", "/disclaimer", "/api/auth/login"];
+
+// 'unsafe-eval' is only needed by the dev server (HMR / React Refresh); never
+// ship it to production.
+const scriptSrc =
+  process.env.NODE_ENV === "production"
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
 
 const SECURITY_HEADERS: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
@@ -12,7 +19,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
   "Content-Security-Policy": [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    scriptSrc,
     "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
     "font-src 'self' fonts.gstatic.com",
     "img-src 'self' data:",
@@ -46,8 +53,7 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
-    const secret = new TextEncoder().encode(process.env.AUTH_SECRET ?? "");
-    await jwtVerify(token, secret);
+    await jwtDecrypt(token, await getEncryptionKey());
     return addSecurityHeaders(NextResponse.next());
   } catch {
     const res = NextResponse.redirect(new URL("/login", req.url));

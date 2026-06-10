@@ -362,7 +362,7 @@ export async function fetchGroups(facultyId: number, sem: number): Promise<OrarG
 }
 
 export async function fetchTimetable(groupId: string, sem: number): Promise<Timetable> {
-  const url = `${ORAR_BASE}/orarSPG.php?ID=${groupId}&mod=grupa&mod2=vizual&print=nu&back=`;
+  const url = `${ORAR_BASE}/orarSPG.php?ID=${encodeURIComponent(groupId)}&mod=grupa&mod2=vizual&print=nu&back=`;
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0", "Accept-Language": "ro-RO,ro;q=0.9" },
     next: { revalidate: 1800 },
