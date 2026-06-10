@@ -29,11 +29,10 @@ export function TimetableGrid({ timetable, onInstructorClick }: Props) {
   const today = todayDayIndex();
 
   // Always show Mon–Fri; add Sat only if there are Saturday classes
-  const days = activeDays.includes(6)
-    ? [1, 2, 3, 4, 5, 6]
-    : [1, 2, 3, 4, 5];
-
-  if (hourSlots.length === 0) return null;
+  const days = useMemo(
+    () => (activeDays.includes(6) ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]),
+    [activeDays]
+  );
 
   const hourIdxMap = useMemo(
     () => new Map(hourSlots.map((h, i) => [h, i])),
@@ -42,8 +41,7 @@ export function TimetableGrid({ timetable, onInstructorClick }: Props) {
 
   const dayIdxMap = useMemo(
     () => new Map(days.map((d, i) => [d, i])),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [days.join(",")]
+    [days]
   );
 
   const classesByDayHour = useMemo(() => {
@@ -66,6 +64,8 @@ export function TimetableGrid({ timetable, onInstructorClick }: Props) {
     }
     return s;
   }, [classes, hourIdxMap]);
+
+  if (hourSlots.length === 0) return null;
 
   return (
     <div className="p-4 sm:p-6 overflow-x-auto">

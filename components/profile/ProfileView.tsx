@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { ProfileData } from "@/lib/usv/profile";
 
 interface Props {
@@ -37,11 +37,28 @@ function InfoRow({
   );
 }
 
+const emptySubscribe = () => () => {};
+
+function useOrarGroup(): string | null {
+  const raw = useSyncExternalStore(
+    emptySubscribe,
+    () => localStorage.getItem("orar_group"),
+    () => null
+  );
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as { groupLabel?: string; groupCode?: string };
+    return parsed.groupLabel ?? parsed.groupCode ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function ProfileView({ displayName, userId, expiresAt }: Props) {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [orarGroup, setOrarGroup] = useState<string | null>(null);
+  const orarGroup = useOrarGroup();
 
   useEffect(() => {
     fetch("/api/usv/profile")
@@ -52,14 +69,6 @@ export function ProfileView({ displayName, userId, expiresAt }: Props) {
       })
       .catch(() => setError("Eroare conexiune"))
       .finally(() => setLoading(false));
-
-    try {
-      const raw = localStorage.getItem("orar_group");
-      if (raw) {
-        const parsed = JSON.parse(raw) as { groupLabel?: string; groupCode?: string };
-        setOrarGroup(parsed.groupLabel ?? parsed.groupCode ?? null);
-      }
-    } catch {}
   }, []);
 
   const expiryStr = new Date(expiresAt).toLocaleString("ro-RO", {

@@ -19,7 +19,6 @@ export function GroupPicker({ facultyId, studyYear, defaultSemester, onSelect, o
   const [yearFilter, setYearFilter] = useState<number | null>(studyYear);
 
   useEffect(() => {
-    setLoading(true);
     fetch(`/api/orar/groups?facultyId=${facultyId}&sem=${defaultSemester}`)
       .then((r) => r.json())
       .then((data) => {

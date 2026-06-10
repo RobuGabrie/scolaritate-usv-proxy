@@ -17,17 +17,19 @@ export default async function StudiuPage() {
 
   return (
     <main className="flex-1 flex flex-col overflow-y-auto">
-      <div className="px-4 sm:px-6 pt-14 sm:pt-8 pb-5 border-b border-border flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Studiu</h1>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Notițe și fișe de studiu pe materii.
-          </p>
+      <div className="px-4 sm:px-6 pt-14 sm:pt-8 pb-5 border-b border-border">
+        <div className="max-w-3xl mx-auto flex items-end justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Studiu</h1>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Notițe și fișe de studiu pe materii.
+            </p>
+          </div>
+          <RequestButton label="Cere o materie" defaultType="materie-noua" />
         </div>
-        <RequestButton label="Cere o materie" defaultType="materie-noua" />
       </div>
 
-      <div className="px-4 sm:px-6 py-6 max-w-2xl w-full">
+      <div className="px-4 sm:px-6 py-6 max-w-3xl w-full mx-auto">
         <Suspense fallback={<StudyListSkeleton />}>
           <StudyContent cookies={session.cookies} />
         </Suspense>

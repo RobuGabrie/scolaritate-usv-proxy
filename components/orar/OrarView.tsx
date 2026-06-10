@@ -76,6 +76,7 @@ export function OrarView({ facultyId, studyYear }: Props) {
 
   // Resolve group ID for a given semester (use cache or fetch groups)
   const resolveAndLoad = useCallback(async (group: SavedGroup, sem: number) => {
+    setSavedGroup(group);
     const cached = group.semIds[String(sem)];
     if (cached) {
       await loadTimetable(cached, sem);
@@ -104,13 +105,12 @@ export function OrarView({ facultyId, studyYear }: Props) {
     }
   }, [loadTimetable]);
 
-  // On mount: read saved group and load timetable
+  // On mount: read saved group and load timetable. Deferred a tick so the
+  // hydration render commits before any state updates land.
   useEffect(() => {
     const saved = readSavedGroup();
-    if (saved) {
-      setSavedGroup(saved);
-      resolveAndLoad(saved, semester);
-    }
+    if (!saved) return;
+    queueMicrotask(() => resolveAndLoad(saved, semester));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -270,6 +270,7 @@ export function OrarView({ facultyId, studyYear }: Props) {
 
       {selectedInstructor && savedGroup && (
         <InstructorModal
+          key={selectedInstructor}
           instructorName={selectedInstructor}
           facultyId={savedGroup.facultyId}
           semester={semester}

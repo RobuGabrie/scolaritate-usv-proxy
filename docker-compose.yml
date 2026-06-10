@@ -70,6 +70,7 @@ services:
       - no-new-privileges:true
 
   web:
+    image: ghcr.io/robugabrie/scolaritate-usv-proxy:latest
     build: .
     network_mode: "service:vpn"
     depends_on:

@@ -40,7 +40,7 @@ export function GradesView({ grades: initialGrades, academicYear: initialYear, c
   const [years, setYears] = useState<YearOption[]>(
     currentStrm ? [{ strm: currentStrm, label: initialYear || currentStrm }] : []
   );
-  const [yearsLoading, setYearsLoading] = useState(false);
+  const [yearsLoading, setYearsLoading] = useState(Boolean(currentStrm));
   const [yearSwitchLoading, setYearSwitchLoading] = useState(false);
   const [yearError, setYearError] = useState<string | null>(null);
 
@@ -50,7 +50,6 @@ export function GradesView({ grades: initialGrades, academicYear: initialYear, c
   // Discover all available years in the background after mount
   useEffect(() => {
     if (!currentStrm) return;
-    setYearsLoading(true);
     fetch("/api/usv/note/years")
       .then((r) => r.json())
       .then((data) => {

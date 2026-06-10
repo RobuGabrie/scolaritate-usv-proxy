@@ -3,15 +3,15 @@ title: "Întrebări și răspunsuri model"
 updated: 2026-06-10
 ---
 
-# ❓ Programare Web — Întrebări și Răspunsuri Model
+# Programare Web — Întrebări și Răspunsuri Model
 
 > **Cum folosești fișierul:** acoperă răspunsul, citește întrebarea, răspunde cu voce tare sau pe hârtie, apoi compară. Fiecare răspuns e scris **exact așa cum l-ai scrie pe foaia de examen** — definiție → explicație → cod/desen.
 >
-> 📘 Pentru explicații detaliate și analogii, vezi `EXAM-GUIDE.md`.
+> Pentru explicații detaliate și analogii, vezi ghidul complet de pe pagina materiei.
 
 ---
 
-## 🧱 SECȚIUNEA A — HTML & CSS (1 întrebare la examen)
+## SECȚIUNEA A — HTML & CSS (1 întrebare la examen)
 
 ---
 
@@ -77,7 +77,7 @@ Orice document HTML are structura:
 - **border** — marginea vizibilă a elementului;
 - **margin** — spațiul dintre element și vecinii lui; e *în exterior*, mereu transparent.
 
-🎯 *Padding-ul împinge border-ul departe de conținut; margin-ul împinge celelalte elemente departe de border.*
+*Padding-ul împinge border-ul departe de conținut; margin-ul împinge celelalte elemente departe de border.*
 
 ```css
 div {
@@ -231,7 +231,7 @@ Rețeta: `transition` pe starea de bază, noul `transform` pe `:hover`:
 
 ---
 
-## 🌐 SECȚIUNEA B — SERVER (2 întrebări la examen)
+## SECȚIUNEA B — SERVER (2 întrebări la examen)
 
 ---
 
@@ -258,7 +258,7 @@ Rețeta: `transition` pe starea de bază, noul `transform` pe `:hover`:
 | HTML-ul se construiește | pe **server** (template engine: EJS, PUG) | în **browser** (fetch + DOM) |
 | Serverul trimite | pagina gata făcută | date brute (JSON) printr-un API |
 | Avantaj | prima încărcare rapidă, SEO bun | pagina se actualizează fără reload, ca o aplicație |
-| Analogie | 🍽️ restaurant: primești mâncarea gătită | 🥡 meal kit: primești ingredientele și gătești acasă |
+| Analogie | restaurant: primești mâncarea gătită | meal kit: primești ingredientele și gătești acasă |
 
 ---
 
@@ -315,7 +315,7 @@ server.get("/sum", (req, res) => {
 | PUT | update | `PUT /heroes?oldName=John&newName=Tony` |
 | DELETE | delete | `DELETE /heroes?name=John` |
 
-**Status codes** — prima cifră e categoria: **2xx** = succes (`200` OK, `201` Created), **4xx** = vina clientului (`400` Bad Request, `404` Not Found), **5xx** = vina serverului (`500` Internal Server Error). 🧠 *4 = tu, 5 = eu (serverul).*
+**Status codes** — prima cifră e categoria: **2xx** = succes (`200` OK, `201` Created), **4xx** = vina clientului (`400` Bad Request, `404` Not Found), **5xx** = vina serverului (`500` Internal Server Error). *4 = tu, 5 = eu (serverul).*
 
 ```js
 const express = require("express");
@@ -360,14 +360,14 @@ function computeSumWithDelay(a, b, delay) {
     if (isNaN(a) || isNaN(b)) {
       throw new Error(`Not a number`);
     }
-    return a + b;       // ⚠️ return din CALLBACK, nu din computeSumWithDelay
+    return a + b;       // return din CALLBACK, nu din computeSumWithDelay
   }, delay);
 }
 ```
 
 **De ce nu merge:** `computeSumWithDelay` doar predă callback-ul lui `setTimeout` și **se termină imediat**, fără `return` propriu → apelantul primește `undefined` pe loc. Când, după `delay` milisecunde, callback-ul rulează, `return`-ul lui iese din *callback* (o altă funcție), în mecanismul timerului, unde nu ascultă nimeni — valoarea se pierde. La fel, `throw`-ul se întâmplă după ce `try/catch`-ul apelantului s-a închis demult, deci nu mai are cine să-l prindă.
 
-🎯 *`return` și `throw` urcă doar pe stiva de apeluri activă în acel moment; când rulează callback-ul asincron, stiva apelantului a dispărut.*
+*`return` și `throw` urcă doar pe stiva de apeluri activă în acel moment; când rulează callback-ul asincron, stiva apelantului a dispărut.*
 
 **Versiunea corectă** — împachetăm în Promise: `resolve` înlocuiește `return`, `reject` înlocuiește `throw`; apelantul devine `async`, folosește `await` și prinde erorile cu `try/catch`:
 
@@ -443,7 +443,7 @@ async function main() {
 }
 ```
 
-💡 De punctat la examen: **schimbările sunt identice cu cele de la exercițiul cu `setTimeout`** — e același șablon (Promise + resolve/reject + async/await), aplicat unei baze de date. MySQL rulează ca server separat pe portul **3306**.
+De punctat la examen: **schimbările sunt identice cu cele de la exercițiul cu `setTimeout`** — e același șablon (Promise + resolve/reject + async/await), aplicat unei baze de date. MySQL rulează ca server separat pe portul **3306**.
 
 ---
 
@@ -521,7 +521,7 @@ htmlHeroItem.innerHTML = escapeHtml(`${hero.name} ${hero.level}`);
 
 (Echivalent: folosirea `innerText` în loc de `innerHTML` — `innerText` nu parsează niciodată HTML.)
 
-💡 Esența: **separă datele de cod** — textul utilizatorului e *date*, nu HTML.
+Esența: **separă datele de cod** — textul utilizatorului e *date*, nu HTML.
 
 ---
 
@@ -577,7 +577,7 @@ res.clearCookie("cheie");
 
 **De ce nu stocăm datele direct în cookie:** clientul își poate **edita** cookie-urile — oricine ar falsifica „loggedIn=true".
 
-**Sesiunea** rezolvă asta împărțind stocarea: datele reale stau **pe server**; cookie-ul (`connect.sid`) ține doar un **session-id** lung, aleator, semnat cu `secret`-ul serverului (nu poate fi ghicit sau falsificat). 🧠 Analogie: sesiunea = camera de hotel, cookie-ul = cardul de acces.
+**Sesiunea** rezolvă asta împărțind stocarea: datele reale stau **pe server**; cookie-ul (`connect.sid`) ține doar un **session-id** lung, aleator, semnat cu `secret`-ul serverului (nu poate fi ghicit sau falsificat). Analogie: sesiunea = camera de hotel, cookie-ul = cardul de acces.
 
 **Fluxul de autentificare:**
 
@@ -628,7 +628,7 @@ app.post("/logout", (req, res) => {
 
 ---
 
-## ⚡ BONUS — Întrebări scurte (răspuns în 1–3 propoziții)
+## BONUS — Întrebări scurte (răspuns în 1–3 propoziții)
 
 <details>
 <summary><strong>B1. Ce diferență e între un element și un atribut HTML?</strong></summary>
@@ -704,4 +704,4 @@ Un mini-document privat și sigilat al componentei (`this.attachShadow({mode: "c
 
 ---
 
-> 🌟 **Dacă nu reții nimic altceva:** clientul întreabă / serverul răspunde și HTTP uită totul (→ cookies/sesiuni) · 4xx = tu, 5xx = serverul · `return`/`throw` mor în callback-uri → Promise + async/await · toate atacurile = date tratate drept cod → escapare, query-uri parametrizate, hash cu salt.
+> **Dacă nu reții nimic altceva:** clientul întreabă / serverul răspunde și HTTP uită totul (→ cookies/sesiuni) · 4xx = tu, 5xx = serverul · `return`/`throw` mor în callback-uri → Promise + async/await · toate atacurile = date tratate drept cod → escapare, query-uri parametrizate, hash cu salt.

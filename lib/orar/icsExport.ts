@@ -60,7 +60,7 @@ export function generateIcs(timetable: Timetable, academicStartYear: number): st
 
     // For even/odd patterns, shift start by 1 week so INTERVAL=2 lands correctly.
     // Convention: week 1 (first week) = odd.
-    let dtStart = new Date(firstOccurrence);
+    const dtStart = new Date(firstOccurrence);
     if (entry.weekPattern.kind === "even") {
       dtStart.setDate(dtStart.getDate() + 7);
     }

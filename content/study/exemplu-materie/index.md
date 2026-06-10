@@ -24,7 +24,7 @@ Tabele GFM, liste, cod:
 
 | Subiect | Status |
 | ------- | ------ |
-| Exemplu | ✅     |
+| Exemplu |     |
 
 ```c
 int main(void) { return 0; }

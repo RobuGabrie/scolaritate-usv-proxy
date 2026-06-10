@@ -33,11 +33,10 @@ export function InstructorModal({ instructorName, facultyId, semester, onClose }
     typeof window !== "undefined" && window.innerWidth < 768 ? "day" : "week"
   );
 
+  // Initial state already covers the loading phase; the modal is keyed by
+  // instructor at the call site, so a new instructor means a fresh mount.
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setTimetable(null);
 
     fetch(
       `/api/orar/instructor-schedule?name=${encodeURIComponent(instructorName)}&facultyId=${facultyId}&sem=${semester}`

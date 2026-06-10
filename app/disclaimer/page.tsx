@@ -172,13 +172,13 @@ export default function DisclaimerPage() {
             <p>
               <strong className="text-foreground">Scolaritate+</strong> este un proiect personal realizat de{" "}
               un student la Universitatea
-              „Ștefan cel Mare" din Suceava (USV). Platforma a apărut din necesitate practică:
+              „Ștefan cel Mare” din Suceava (USV). Platforma a apărut din necesitate practică:
               accesul la portalul oficial de note era blocat în toate browserele moderne din cauza
               unui protocol de securitate depășit.
             </p>
             <p>
               Proiectul <strong className="text-foreground">nu este afiliat, sponsorizat sau
-              aprobat</strong> de Universitatea „Ștefan cel Mare" din Suceava, de Ministerul
+              aprobat</strong> de Universitatea „Ștefan cel Mare” din Suceava, de Ministerul
               Educației sau de orice altă instituție oficială. Orice asemănare cu o interfață
               oficială este pur coincidentală.
             </p>
@@ -242,7 +242,7 @@ export default function DisclaimerPage() {
               niciun fel de date către terți. Nu există baze de date cu informații personale.
             </p>
             <div className="rounded-xl bg-primary/8 border border-primary/20 px-4 py-3 text-[12.5px] text-primary/90 leading-relaxed">
-              Emailul introdus în câmpul „Ține minte emailul" este salvat <strong>exclusiv local</strong>,
+              Emailul introdus în câmpul „Ține minte emailul” este salvat <strong>exclusiv local</strong>,
               în browserul tău (localStorage), și nu este transmis nicăieri în afara autentificării normale.
             </div>
           </Section>
@@ -287,7 +287,7 @@ export default function DisclaimerPage() {
             </div>
             <div className="text-[13px] text-muted-foreground leading-relaxed space-y-3">
               <p>
-                Platforma este oferită <strong className="text-foreground">„ca atare"</strong>,
+                Platforma este oferită <strong className="text-foreground">„ca atare”</strong>,
                 fără nicio garanție explicită sau implicită de disponibilitate, continuitate,
                 acuratețe sau adecvare pentru un scop anume.
               </p>
