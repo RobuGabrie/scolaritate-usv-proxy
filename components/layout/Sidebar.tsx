@@ -96,17 +96,18 @@ export function Sidebar({ displayName, userId }: SidebarProps) {
 
       <nav className="space-y-0.5">
         {NAV_ITEMS.map((item) => (
-          <button
+          <Link
             key={item.href}
-            onClick={() => { router.push(item.href); setMobileOpen(false); }}
-            className={`w-full text-left px-2 py-1.5 rounded-md text-sm transition-colors ${
+            href={item.href}
+            onClick={() => setMobileOpen(false)}
+            className={`block w-full text-left px-2 py-1.5 rounded-md text-sm transition-colors ${
               pathname.startsWith(item.href)
                 ? "bg-sidebar-accent text-foreground font-medium"
                 : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
             }`}
           >
             {item.label}
-          </button>
+          </Link>
         ))}
       </nav>
 
