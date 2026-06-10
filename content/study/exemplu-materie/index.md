@@ -11,7 +11,8 @@ Asta e o materie de exemplu — șterge folderul `content/study/exemplu-materie/
 ## Cum adaugi o materie
 
 1. Creează un folder `content/study/<slug>/` (doar litere mici, cifre și cratime).
-2. Pune conținutul în `index.md` cu frontmatter (`title`, opțional `year`, `semester`, `order`, `updated`).
+2. Pune conținutul în `index.md` cu frontmatter (`title`, opțional `faculty`, `year`, `semester`, `order`, `updated`).
+   `faculty` e codul scurt din PeopleSoft (ex. `FIESC`) — materiile sunt grupate pe facultăți, iar facultatea studentului (din profil) apare prima. Fără `faculty`, materia apare la „General".
 3. Fișiere atașate (PDF-uri, imagini) merg în `content/study/<slug>/files/`.
 
 Pe server folderul e montat ca volum — `git pull` și modificările apar fără rebuild.

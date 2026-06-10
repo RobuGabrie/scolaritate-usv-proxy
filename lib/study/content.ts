@@ -12,6 +12,8 @@ const FILENAME_RE = /^[\w][\w .()-]{0,120}$/;
 export interface StudySubject {
   slug: string;
   title: string;
+  // Short code matching ProfileData.faculty from PeopleSoft, e.g. "FIESC"
+  faculty?: string;
   year?: number;
   semester?: number;
   order?: number;
@@ -44,6 +46,10 @@ function parseMeta(slug: string, raw: string): { meta: StudySubject; body: strin
     meta: {
       slug,
       title: typeof data.title === "string" && data.title.trim() ? data.title.trim() : slug,
+      faculty:
+        typeof data.faculty === "string" && data.faculty.trim()
+          ? data.faculty.trim().toUpperCase()
+          : undefined,
       year: typeof data.year === "number" ? data.year : undefined,
       semester: typeof data.semester === "number" ? data.semester : undefined,
       order: typeof data.order === "number" ? data.order : undefined,
