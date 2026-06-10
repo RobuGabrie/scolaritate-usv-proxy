@@ -30,7 +30,7 @@ export default async function SubjectPage({ params }: PageProps) {
   return (
     <main className="flex-1 flex flex-col overflow-y-auto">
       <div className="px-4 sm:px-6 pt-14 sm:pt-8 pb-5 border-b border-border">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <Link
             href="/studiu"
             className="inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground hover:text-foreground transition-colors mb-2"
@@ -54,7 +54,7 @@ export default async function SubjectPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 py-6 max-w-3xl w-full mx-auto">
+      <div className="px-4 sm:px-6 py-6 max-w-5xl w-full mx-auto">
         {sheets.length > 0 && (
           <section className="mb-7">
             <h2 className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground mb-2.5">

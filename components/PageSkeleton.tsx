@@ -1,5 +1,5 @@
 export function PageSkeleton({ centered = false }: { centered?: boolean }) {
-  const inner = centered ? "max-w-3xl mx-auto" : "max-w-2xl";
+  const inner = centered ? "max-w-5xl mx-auto" : "max-w-2xl";
 
   return (
     <main className="flex-1 flex flex-col overflow-hidden animate-pulse">
