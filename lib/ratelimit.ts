@@ -70,4 +70,6 @@ export const LIMITS = {
   usv: { max: 30, windowMs: 5 * 60 * 1000 },
   // Schedule: relaxed — 60 req per 5 min (orar.usv.ro is public)
   orar: { max: 60, windowMs: 5 * 60 * 1000 },
+  // Study content requests: strict — forwarded to Discord, 3 per hour
+  studyRequest: { max: 3, windowMs: 60 * 60 * 1000 },
 } satisfies Record<string, RateLimitConfig>;

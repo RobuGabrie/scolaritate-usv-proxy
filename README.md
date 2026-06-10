@@ -9,6 +9,7 @@ USV's portal (scolaritate.usv.ro) only works on campus or over VPN, runs on lega
 - **Grades** — full grade list with semester filtering and a calculator that shows what you need in remaining subjects to hit a target average
 - **Timetable** — weekly and daily views, pinch to zoom on mobile, tap a professor to see their full schedule across all groups
 - **Profile** — basic academic info pulled straight from the student system
+- **Study** — owner-curated study notes and sheets per subject, written as markdown files in `content/study/` (edited via git, no database). Students can send an anonymous request (new subject, correction, edit rights) that is forwarded to a Discord webhook and never stored
 
 Everything is read-only. No data is stored beyond your session cookie, which expires after 8 hours.
 
@@ -39,6 +40,7 @@ Runs on port 3000. In production, a `cloudflared` container exposes it via a Clo
 | `JWT_SECRET` | Random secret for signing session tokens — `openssl rand -base64 32` |
 | `CLOUDFLARE_TUNNEL_TOKEN` | From Cloudflare Zero Trust → Tunnels, if you're using that |
 | `GRAFANA_PASSWORD` | Password for the Grafana admin account (default: `changeme` — change it) |
+| `DISCORD_WEBHOOK_URL` | Webhook for "Studiu" content requests (optional — submitting returns 503 if unset) |
 
 The VPN account doesn't need to be the same one students log in with. It just needs to be a valid USV account to bring up the OpenVPN tunnel.
 

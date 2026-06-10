@@ -14,6 +14,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=256"
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /app/content/study \
   && chown -R node:node /app
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static

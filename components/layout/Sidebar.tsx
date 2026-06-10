@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const NAV_ITEMS = [
   { label: "Note", href: "/note" },
   { label: "Orar", href: "/orar" },
+  { label: "Studiu", href: "/studiu" },
   { label: "Profil", href: "/profil" },
 ];
 
