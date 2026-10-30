@@ -8,6 +8,8 @@ export interface PsContext {
   currentStrm: string;
 }
 
+// Adapted from noteusv.tech (USV Portal) MIT-licensed proxy implementation.
+// Copyright (c) noteusv.tech contributors.
 export function parsePsContext(html: string): PsContext | null {
   try {
     const m = html.match(/strCurrUrl\s*=\s*['"]([^'"]+)['"]/i);
