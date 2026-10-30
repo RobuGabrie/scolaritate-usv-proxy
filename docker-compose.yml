@@ -72,6 +72,8 @@ services:
   web:
     image: ghcr.io/robugabrie/scolaritate-usv-proxy:latest
     build: .
+    # Sidecar networking pattern adapted from noteusv.tech (USV Portal), MIT-licensed.
+    # Copyright (c) noteusv.tech contributors.
     network_mode: "service:vpn"
     depends_on:
       vpn:
@@ -96,6 +98,8 @@ services:
     command: tunnel --no-autoupdate run
     environment:
       TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    # Sidecar networking pattern adapted from noteusv.tech (USV Portal), MIT-licensed.
+    # Copyright (c) noteusv.tech contributors.
     network_mode: "service:vpn"
     depends_on:
       web:

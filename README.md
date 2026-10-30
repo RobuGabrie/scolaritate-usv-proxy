@@ -67,6 +67,17 @@ If the VPN sidecar disconnects, everything breaks until it reconnects. The healt
 
 This runs on a single server. Don't expect it to hold up if the entire student body hits it simultaneously — the upstream USV system would rate-limit the server IP well before that.
 
+## Attribution & license compliance
+
+Parts of this project were adapted from the MIT-licensed proxy implementation used in **noteusv.tech (USV Portal)**, including:
+- authentication/session flow concepts for PeopleSoft proxying
+- PeopleSoft context parsing approach used by `parsePsContext`
+- Docker OpenVPN sidecar networking pattern (`network_mode: "service:vpn"`)
+
+Attribution is provided under the original MIT terms.
+
+Copyright (c) noteusv.tech contributors
+
 ## Disclaimer
 
 Unofficial student project. Not affiliated with USV. Your credentials go directly to USV's servers — this app just handles the TLS/VPN layer so you don't have to set it up yourself.
