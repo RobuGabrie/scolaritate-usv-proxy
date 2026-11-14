@@ -83,6 +83,15 @@ jobs:
             git pull origin main
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose pull web
+            echo "--- state before deploy ---"
+            docker compose ps -a || true
+            docker compose logs --tail 40 vpn tunnel || true
+            # web and tunnel share vpn's network namespace; if vpn ever restarted they are
+            # left on a dead network, so always recreate all three together.
+            docker compose up -d --force-recreate vpn web tunnel
             docker compose up -d
             docker image prune -f
+            sleep 30
+            echo "--- state after deploy ---"
             docker compose ps
+            docker compose logs --tail 20 vpn tunnel
