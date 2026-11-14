@@ -1,0 +1,21 @@
+name: Shutdown server stack
+
+on:
+  workflow_dispatch:
+
+jobs:
+  shutdown:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stop and remove all containers on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/scolaritate-usv-proxy
+            docker compose down
+            docker compose ps -a
+            docker ps
